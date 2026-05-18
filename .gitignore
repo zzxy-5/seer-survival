@@ -7,6 +7,13 @@
 *.xls
 *.xlsx
 
+# Local raw data directories
+data/raw/
+data/processed/
+
+# Local planning drafts that should not be uploaded
+docs/superpowers/plans/
+
 # Local scratch files from analysis/build runs
 .codex_tmp/
 outputs/
