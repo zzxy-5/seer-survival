@@ -1,0 +1,71 @@
+{
+  "sexes": [
+    "Female",
+    "Male"
+  ],
+  "sites": [
+    "Gum and Other Mouth",
+    "Hypopharynx",
+    "Nasopharynx",
+    "Oropharynx",
+    "Other Oral Cavity and Pharynx",
+    "Tongue",
+    "Tonsil"
+  ],
+  "histology_groups": [
+    "8000-8009: unspecified neoplasms",
+    "8010-8049: epithelial neoplasms, NOS",
+    "8050-8089: squamous cell neoplasms",
+    "8090-8119: basal cell neoplasms",
+    "8120-8139: transitional cell papillomas and carcinomas",
+    "8140-8389: adenomas and adenocarcinomas",
+    "8430-8439: mucoepidermoid neoplasms",
+    "8440-8499: cystic, mucinous and serous neoplasms",
+    "8500-8549: ductal and lobular neoplasms",
+    "8550-8559: acinar cell neoplasms",
+    "8560-8579: complex epithelial neoplasms",
+    "8680-8719: paragangliomas and glumus tumors",
+    "8800-8809: soft tissue tumors and sarcomas, NOS",
+    "8810-8839: fibromatous neoplasms",
+    "8850-8889: lipomatous neoplasms",
+    "8890-8929: myomatous neoplasms",
+    "8930-8999: complex mixed and stromal neoplasms",
+    "9040-9049: synovial-like neoplasms",
+    "9060-9099: germ cell neoplasms",
+    "9120-9169: blood vessel tumors",
+    "9180-9249: osseous and chondromatous neoplasms",
+    "9350-9379: miscellaneous tumors",
+    "9490-9529: neuroepitheliomatous neoplasms"
+  ],
+  "age_groups": [
+    "<40",
+    "40-49",
+    "50-59",
+    "60-69",
+    "70-79",
+    "80+"
+  ],
+  "t_stages": [
+    "T0",
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "TX",
+    "Unknown"
+  ],
+  "n_stages": [
+    "N0",
+    "N1",
+    "N2",
+    "N3",
+    "NX",
+    "Unknown"
+  ],
+  "m_stages": [
+    "M0",
+    "M1",
+    "MX",
+    "Unknown"
+  ]
+}

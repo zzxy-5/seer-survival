@@ -12,7 +12,10 @@ def parse_survival_months(value: str) -> int:
     text = str(value).strip()
     if text == "":
         raise ValueError("Survival months is blank")
-    months = int(float(text))
+    try:
+        months = int(float(text))
+    except ValueError as exc:
+        raise ValueError(f"Invalid survival months: {value}") from exc
     if months < 0:
         raise ValueError(f"Survival months must be non-negative: {value}")
     return months
@@ -28,7 +31,10 @@ def parse_event(vital_status: str) -> bool:
 
 
 def _parse_age(age: str) -> int:
-    return int(float(str(age).strip()))
+    try:
+        return int(float(str(age).strip()))
+    except ValueError as exc:
+        raise ValueError(f"Invalid age: {age}") from exc
 
 
 def age_group(age: str) -> str:
@@ -81,7 +87,10 @@ def normalize_m_stage(raw: str) -> str:
 
 
 def choose_tnm_source(row: Mapping[str, str]) -> tuple[str, str, str]:
-    year = int(float(row[SOURCE_COLUMNS["year"]]))
+    try:
+        year = int(float(row[SOURCE_COLUMNS["year"]]))
+    except ValueError as exc:
+        raise ValueError(f"Invalid year of diagnosis: {row[SOURCE_COLUMNS['year']]}") from exc
     if year >= 2016:
         return (
             row.get(SOURCE_COLUMNS["seer_t_2016"], ""),

@@ -124,6 +124,8 @@ def iter_selected_rows(xlsx_path: str | Path, required_columns: Mapping[str, str
                 values_by_index: dict[int, str] = {}
                 for cell in _children_by_local_name(row, "c"):
                     col_index = cell_ref_to_column_index(cell.attrib.get("r", ""))
+                    if row_number != 1 and selected is not None and col_index not in selected:
+                        continue
                     values_by_index[col_index] = _cell_text(cell, shared_strings)
 
                 if row_number == 1:

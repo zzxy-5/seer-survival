@@ -54,6 +54,10 @@ class NormalizationTests(unittest.TestCase):
         self.assertTrue(parse_event("Dead"))
         self.assertFalse(parse_event("Alive"))
 
+    def test_invalid_survival_months_identifies_field(self):
+        with self.assertRaisesRegex(ValueError, "Invalid survival months: Unknown"):
+            parse_survival_months("Unknown")
+
     def test_normalize_record_uses_ajcc_for_2015(self):
         row = self._source_row("2015", ajcc=("T2a", "N2c", "M0"), seer=("T4", "N3", "M1"))
         record = normalize_record(row)

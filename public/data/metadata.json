@@ -1,0 +1,15 @@
+{
+  "source_file": "统计表.xlsx",
+  "processed_rows": 40866,
+  "record_count": 40650,
+  "skipped_rows": 216,
+  "skipped_reasons": {
+    "ValueError: Invalid survival months: Unknown": 216
+  },
+  "lookup_rows": 9483,
+  "thresholds": {
+    "minimum_sample": 20,
+    "stable_sample": 50
+  },
+  "runtime_mode": "static_lookup_only"
+}
