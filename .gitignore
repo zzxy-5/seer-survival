@@ -1,0 +1,22 @@
+# macOS metadata
+.DS_Store
+._*
+
+# Local raw data and generated workbook artifacts
+统计表.xlsx
+*.xls
+*.xlsx
+
+# Local scratch files from analysis/build runs
+.codex_tmp/
+outputs/
+
+# Runtime/dependency folders
+node_modules/
+.venv/
+__pycache__/
+
+# Logs and environment files
+*.log
+.env
+.env.*
