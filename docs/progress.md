@@ -10,7 +10,7 @@
 - [x] Task 2: Normalization library and tests
 - [x] Task 3: Kaplan-Meier calculator and tests
 - [x] Task 4: Streaming XLSX extraction and tests
-- [ ] Task 5: Pending
+- [x] Task 5: Lookup builder, validation, and tests
 - [ ] Task 6: Pending
 - [ ] Task 7: Pending
 - [ ] Task 8: Pending
@@ -18,6 +18,7 @@
 
 ## Latest Updates
 
+- 2026-05-19: Added Task 5 lookup artifact builder, quality flags, artifact validation checks, and tests for generated rows and validation failures.
 - 2026-05-19: Added Task 4 streaming XLSX reader, shared-string extraction, required-column selection, and minimal workbook tests.
 - 2026-05-19: Added Task 3 Kaplan-Meier calculator with censoring-aware curve, survival horizons, median survival handling, and unit tests.
 - 2026-05-19: Added Task 2 normalization schema, age grouping, TNM standardization, event parsing, lookup key generation, and unit tests.
