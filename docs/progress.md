@@ -12,12 +12,13 @@
 - [x] Task 4: Streaming XLSX extraction and tests
 - [x] Task 5: Lookup builder, validation, and tests
 - [x] Task 6: Offline lookup build CLI and generated public data artifacts
-- [ ] Task 7: Pending
+- [x] Task 7: React static lookup interface and frontend tests
 - [ ] Task 8: Pending
 - [ ] Task 9: Pending
 
 ## Latest Updates
 
+- 2026-05-19: Added Task 7 React interface, deterministic browser lookup, survival summary display, KM curve view, and frontend tests.
 - 2026-05-19: Added Task 6 offline build CLI, generated static lookup/options/metadata JSON, clarified skipped-row reasons, and kept the source workbook ignored.
 - 2026-05-19: Added Task 5 lookup artifact builder, quality flags, artifact validation checks, and tests for generated rows and validation failures.
 - 2026-05-19: Added Task 4 streaming XLSX reader, shared-string extraction, required-column selection, and minimal workbook tests.

@@ -20,8 +20,10 @@ outputs/
 
 # Runtime/dependency folders
 node_modules/
+dist/
 .venv/
 __pycache__/
+*.tsbuildinfo
 
 # Logs and environment files
 *.log
