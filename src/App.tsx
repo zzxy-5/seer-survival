@@ -179,7 +179,7 @@ export default function App() {
           {lookup.error ? (
             <EmptyResult title={lookup.error} />
           ) : lookup.result ? (
-            <ResultView result={lookup.result} metadata={metadata} />
+            <ResultView result={lookup.result} />
           ) : artifact ? (
             <EmptyResult title="没有对应查表行" />
           ) : (
@@ -214,13 +214,13 @@ function EmptyResult({ title }: { title: string }) {
   );
 }
 
-function ResultView({ result, metadata }: { result: LookupResult; metadata: Metadata | null }) {
+function ResultView({ result }: { result: LookupResult }) {
   const row = result.row;
   return (
     <>
       <div className="result-topline">
         <div>
-          <p className="kicker">预测输出</p>
+          <p className="kicker">中位生存月数估计</p>
           <h2>{formatMedianSurvival(row.median_survival_months)}</h2>
         </div>
         <span className={`quality ${row.data_quality_flag}`}>{qualityLabel(row.data_quality_flag)}</span>
@@ -250,14 +250,6 @@ function ResultView({ result, metadata }: { result: LookupResult; metadata: Meta
           <dt>匹配键</dt>
           <dd>{result.matchedKey}</dd>
         </div>
-        {metadata ? (
-          <div>
-            <dt>数据产物</dt>
-            <dd>
-              {metadata.lookup_rows.toLocaleString()} 条查表行，跳过 {metadata.skipped_rows.toLocaleString()} 行
-            </dd>
-          </div>
-        ) : null}
       </dl>
     </>
   );
