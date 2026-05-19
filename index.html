@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>头颈肿瘤生存图谱</title>
+    <style>
+      .boot-fallback {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        margin: 0;
+        padding: 24px;
+        background: #edf1ec;
+        color: #17201d;
+        font-family: "Aptos", "PingFang SC", "Microsoft YaHei", sans-serif;
+      }
+
+      .boot-fallback__panel {
+        width: min(560px, 100%);
+        border: 1px solid rgba(23, 32, 29, 0.16);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.82);
+        padding: 24px;
+        box-shadow: 0 22px 60px rgba(21, 31, 28, 0.1);
+      }
+
+      .boot-fallback h1 {
+        margin: 0;
+        font-family: Georgia, "Songti SC", serif;
+        font-size: 2rem;
+        line-height: 1.08;
+        letter-spacing: 0;
+      }
+
+      .boot-fallback p {
+        margin: 14px 0 0;
+        color: #46524e;
+        line-height: 1.7;
+      }
+
+      .boot-fallback code {
+        display: inline-block;
+        margin-top: 10px;
+        border-radius: 6px;
+        background: #17201d;
+        color: #f8faf6;
+        padding: 7px 9px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <main class="boot-fallback">
+        <section class="boot-fallback__panel" aria-label="本地打开提示">
+          <h1>头颈肿瘤生存图谱</h1>
+          <p>请通过本地服务器打开。这个文件是 Vite 源码入口，直接用 file:// 打开时浏览器不会编译 React/TypeScript。</p>
+          <p>在项目目录运行：</p>
+          <code>npm run dev</code>
+        </section>
+      </main>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

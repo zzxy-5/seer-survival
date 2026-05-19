@@ -7,14 +7,25 @@
 *.xls
 *.xlsx
 
+# Local raw data directories
+data/raw/
+data/processed/
+
+# Local planning drafts that should not be uploaded
+docs/superpowers/plans/
+.superpowers/
+
 # Local scratch files from analysis/build runs
 .codex_tmp/
 outputs/
+standalone.html
 
 # Runtime/dependency folders
 node_modules/
+dist/
 .venv/
 __pycache__/
+*.tsbuildinfo
 
 # Logs and environment files
 *.log
