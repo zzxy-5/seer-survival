@@ -1,7 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 
+import { dataUrl } from "./data-path";
 import { findLookupResult, type LookupArtifact, type LookupInputs, type LookupResult, type LookupRow } from "./lookup";
-import { formatMedianSurvival, formatProbability, matchingLevelLabel, qualityLabel } from "./presentation";
+import {
+  APP_COPY,
+  displayLabel,
+  formatMatchedKey,
+  formatMedianSurvival,
+  formatProbability,
+  matchingLevelLabel,
+  qualityLabel,
+} from "./presentation";
 import "./styles.css";
 
 type OptionsData = {
@@ -84,9 +93,9 @@ export default function App() {
   useEffect(() => {
     let cancelled = false;
     Promise.all([
-      loadJson<LookupArtifact>("/data/survival_lookup.json"),
-      loadJson<OptionsData>("/data/options.json"),
-      loadJson<Metadata>("/data/metadata.json"),
+      loadJson<LookupArtifact>(dataUrl("survival_lookup.json")),
+      loadJson<OptionsData>(dataUrl("options.json")),
+      loadJson<Metadata>(dataUrl("metadata.json")),
     ])
       .then(([nextArtifact, nextOptions, nextMetadata]) => {
         if (cancelled) {
@@ -122,7 +131,7 @@ export default function App() {
     try {
       return { result: findLookupResult(artifact, makeInputs(form)), error: null };
     } catch (error: unknown) {
-      return { result: null, error: error instanceof Error ? error.message : "查表失败" };
+      return { result: null, error: error instanceof Error ? error.message : "查询失败" };
     }
   }, [artifact, form]);
 
@@ -133,25 +142,47 @@ export default function App() {
   return (
     <main className="app-shell">
       <header className="masthead">
-        <div>
-          <p className="kicker">SEER Survival Lookup</p>
-          <h1>口腔与咽部肿瘤生存月数查表</h1>
+        <div className="brand-lockup">
+          <span className="brand-mark" aria-hidden="true">
+            图谱
+          </span>
+          <div>
+            <p className="kicker">{APP_COPY.eyebrow}</p>
+            <h1>{APP_COPY.name}</h1>
+            <p className="lede">{APP_COPY.description}</p>
+          </div>
         </div>
         <div className="status-strip">
-          <span>科研展示版</span>
-          <span>静态 JSON</span>
-          <span>不用于临床决策</span>
+          {APP_COPY.statusBadges.map((badge) => (
+            <span key={badge}>{badge}</span>
+          ))}
         </div>
       </header>
 
-      <section className="workspace" aria-label="Survival lookup workspace">
-        <section className="input-panel" aria-label="Lookup inputs">
+      <section className="workspace" aria-label="头颈肿瘤生存图谱工作区">
+        <section className="input-panel" aria-label="查询条件">
           <div className="panel-heading">
-            <h2>输入组合</h2>
-            {metadata ? <p>{metadata.record_count.toLocaleString()} 条有效记录</p> : <p>加载中</p>}
+            <div>
+              <p className="panel-kicker">输入条件</p>
+              <h2>患者与肿瘤信息</h2>
+            </div>
+            {metadata ? <p>{metadata.record_count.toLocaleString()} 条记录</p> : <p>加载中</p>}
           </div>
 
           {loadError ? <div className="notice error">{loadError}</div> : null}
+
+          {metadata ? (
+            <div className="meta-strip" aria-label="数据概览">
+              <div>
+                <span>有效记录</span>
+                <strong>{metadata.record_count.toLocaleString()}</strong>
+              </div>
+              <div>
+                <span>可查询组合</span>
+                <strong>{metadata.lookup_rows.toLocaleString()}</strong>
+              </div>
+            </div>
+          ) : null}
 
           <div className="control-grid">
             <SelectField label="性别" value={form.sex} options={options?.sexes ?? []} onChange={(value) => updateForm("sex", value)} />
@@ -175,16 +206,19 @@ export default function App() {
           </div>
         </section>
 
-        <section className="result-panel" aria-label="Lookup result">
-          {lookup.error ? (
-            <EmptyResult title={lookup.error} />
-          ) : lookup.result ? (
-            <ResultView result={lookup.result} />
-          ) : artifact ? (
-            <EmptyResult title="没有对应查表行" />
-          ) : (
-            <EmptyResult title="正在加载查表数据" />
-          )}
+        <section className="result-panel" aria-label="生存参照结果">
+          <div className="result-content">
+            {lookup.error ? (
+              <EmptyResult title={lookup.error} />
+            ) : lookup.result ? (
+              <ResultView result={lookup.result} />
+            ) : artifact ? (
+              <EmptyResult title="没有对应生存分组" />
+            ) : (
+              <EmptyResult title="正在加载生存分组" />
+            )}
+          </div>
+          <MethodBoundary />
         </section>
       </section>
     </main>
@@ -198,7 +232,7 @@ function SelectField({ label, value, options, onChange }: { label: string; value
       <select value={value} onChange={(event) => onChange(event.target.value)} disabled={options.length === 0}>
         {options.map((option) => (
           <option key={option} value={option}>
-            {option}
+            {displayLabel(option)}
           </option>
         ))}
       </select>
@@ -214,13 +248,26 @@ function EmptyResult({ title }: { title: string }) {
   );
 }
 
+function MethodBoundary() {
+  return (
+    <section className="method-boundary" aria-labelledby="method-boundary-title">
+      <h2 id="method-boundary-title">{APP_COPY.method.title}</h2>
+      <ul>
+        {APP_COPY.method.points.map((point) => (
+          <li key={point}>{point}</li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 function ResultView({ result }: { result: LookupResult }) {
   const row = result.row;
   return (
     <>
       <div className="result-topline">
         <div>
-          <p className="kicker">中位生存月数估计</p>
+          <p className="kicker">队列中位生存</p>
           <h2>{formatMedianSurvival(row.median_survival_months)}</h2>
         </div>
         <span className={`quality ${row.data_quality_flag}`}>{qualityLabel(row.data_quality_flag)}</span>
@@ -237,7 +284,7 @@ function ResultView({ result }: { result: LookupResult }) {
 
       <dl className="detail-list">
         <div>
-          <dt>查表层级</dt>
+          <dt>匹配层级</dt>
           <dd>{matchingLevelLabel(row.matching_level)}</dd>
         </div>
         <div>
@@ -247,8 +294,8 @@ function ResultView({ result }: { result: LookupResult }) {
           </dd>
         </div>
         <div>
-          <dt>匹配键</dt>
-          <dd>{result.matchedKey}</dd>
+          <dt>匹配组合</dt>
+          <dd>{formatMatchedKey(result.matchedKey)}</dd>
         </div>
       </dl>
     </>
@@ -275,10 +322,12 @@ function SurvivalCurve({ row }: { row: LookupRow }) {
   return (
     <figure className="curve-panel">
       <figcaption>Kaplan-Meier 生存曲线</figcaption>
-      <svg viewBox="0 0 100 100" role="img" aria-label="Survival curve">
-        <line x1="8" y1="88" x2="94" y2="88" />
-        <line x1="8" y1="10" x2="8" y2="88" />
-        <polyline points={points.join(" ")} />
+      <svg viewBox="0 0 100 100" role="img" aria-label="Kaplan-Meier 生存曲线">
+        <line className="grid-line" x1="8" y1="50" x2="94" y2="50" />
+        <line className="axis-line" x1="8" y1="88" x2="94" y2="88" />
+        <line className="axis-line" x1="8" y1="10" x2="8" y2="88" />
+        <polygon className="curve-fill" points={`${points.join(" ")} 92,88 8,88`} />
+        <polyline className="curve-line" points={points.join(" ")} />
         <text x="7" y="97">
           0
         </text>
