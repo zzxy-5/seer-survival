@@ -27,6 +27,10 @@ type OptionsData = {
 };
 
 type Metadata = {
+  data_source: {
+    zh: string;
+    en: string;
+  };
   source_file: string;
   processed_rows: number;
   record_count: number;
@@ -232,7 +236,7 @@ export default function App() {
           </div>
 
           <TnmAnnotation copy={copy} />
-          <SourceAnnotation metadata={metadata} copy={copy} ui={ui} />
+          <SourceAnnotation metadata={metadata} copy={copy} ui={ui} language={language} />
         </section>
 
         <section className="result-panel" aria-label={ui.resultAria}>
@@ -353,18 +357,20 @@ function SourceAnnotation({
   metadata,
   copy,
   ui,
+  language,
 }: {
   metadata: Metadata | null;
   copy: typeof APP_COPY | typeof import("./presentation").APP_COPY_EN;
   ui: (typeof UI_COPY)[Language];
+  language: Language;
 }) {
   return (
     <section className="annotation-panel source-panel" aria-label={copy.source.title} aria-labelledby="source-note-title">
       <h3 id="source-note-title">{copy.source.title}</h3>
       <dl>
         <div>
-          <dt>{ui.sourceFile}</dt>
-          <dd>{metadata ? metadata.source_file : ui.loading}</dd>
+          <dt>{ui.dataSource}</dt>
+          <dd>{metadata ? metadata.data_source[language] : ui.loading}</dd>
         </div>
         <div>
           <dt>{ui.processedRows}</dt>

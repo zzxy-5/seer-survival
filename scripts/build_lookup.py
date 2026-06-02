@@ -13,6 +13,12 @@ from seer_lookup_pipeline.validation import validate_lookup_artifact
 from seer_lookup_pipeline.xlsx_stream import iter_selected_rows
 
 
+DATA_SOURCE = {
+    "zh": "SEER 数据库导出表（头颈肿瘤队列，诊断年份 2010-2016）",
+    "en": "SEER database export table (head and neck tumor cohort, diagnosis years 2010-2016)",
+}
+
+
 def build_options(artifact: dict[str, Any]) -> dict[str, Any]:
     return {
         "sexes": artifact["summary"]["sexes"],
@@ -22,6 +28,26 @@ def build_options(artifact: dict[str, Any]) -> dict[str, Any]:
         "t_stages": ["T0", "T1", "T2", "T3", "T4", "TX", "Unknown"],
         "n_stages": ["N0", "N1", "N2", "N3", "NX", "Unknown"],
         "m_stages": ["M0", "M1", "MX", "Unknown"],
+    }
+
+
+def build_metadata(
+    source_path: str,
+    processed: int,
+    artifact: dict[str, Any],
+    skipped: int,
+    skipped_reasons: Counter[str],
+) -> dict[str, Any]:
+    return {
+        "data_source": DATA_SOURCE,
+        "source_file": Path(source_path).name,
+        "processed_rows": processed,
+        "record_count": artifact["summary"]["record_count"],
+        "skipped_rows": skipped,
+        "skipped_reasons": dict(sorted(skipped_reasons.items())),
+        "lookup_rows": artifact["summary"]["row_count"],
+        "thresholds": artifact["thresholds"],
+        "runtime_mode": "static_lookup_only",
     }
 
 
@@ -54,16 +80,7 @@ def main() -> None:
     output_dir = Path(args.output)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    metadata = {
-        "source_file": Path(args.input).name,
-        "processed_rows": processed,
-        "record_count": artifact["summary"]["record_count"],
-        "skipped_rows": skipped,
-        "skipped_reasons": dict(sorted(skipped_reasons.items())),
-        "lookup_rows": artifact["summary"]["row_count"],
-        "thresholds": artifact["thresholds"],
-        "runtime_mode": "static_lookup_only",
-    }
+    metadata = build_metadata(args.input, processed, artifact, skipped, skipped_reasons)
 
     (output_dir / "survival_lookup.json").write_text(
         json.dumps(artifact, ensure_ascii=False, separators=(",", ":")),

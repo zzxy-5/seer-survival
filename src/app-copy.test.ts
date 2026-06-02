@@ -15,8 +15,10 @@ describe("app interface copy", () => {
 
   it("renders TNM source guidance and metadata-backed data provenance", () => {
     expect(appSource).toContain("copy.tnm.points.map");
-    expect(appSource).toContain("metadata.source_file");
+    expect(appSource).toContain("metadata.data_source[language]");
+    expect(appSource).not.toContain("metadata.source_file");
     expect(appSource).toContain("copy.source.title");
+    expect(UI_COPY.zh.dataSource).toBe("具体来源");
   });
 
   it("uses primary tumor sites from the data and supports clearer missing-data errors", () => {

@@ -1,4 +1,8 @@
 {
+  "data_source": {
+    "zh": "SEER 数据库导出表（头颈肿瘤队列，诊断年份 2010-2016）",
+    "en": "SEER database export table (head and neck tumor cohort, diagnosis years 2010-2016)"
+  },
   "source_file": "统计表.xlsx",
   "processed_rows": 40866,
   "record_count": 40650,
