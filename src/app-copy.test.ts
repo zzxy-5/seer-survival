@@ -36,9 +36,8 @@ describe("app interface copy", () => {
     expect(appSource).not.toContain("[ui.lookupFailed]");
   });
 
-  it("does not use a redundant text label inside the header mark", () => {
-    const markSource = appSource.match(/<span className="brand-mark" aria-hidden="true">([\s\S]*?)<\/span>/)?.[1] ?? "";
-    expect(markSource).not.toContain("图谱");
-    expect(markSource).toContain("brand-mark-icon");
+  it("does not render a header icon", () => {
+    expect(appSource).not.toContain("brand-mark");
+    expect(appSource).not.toContain("brand-mark-icon");
   });
 });

@@ -155,15 +155,6 @@ export default function App() {
     <main className="app-shell">
       <header className="masthead">
         <div className="brand-lockup">
-          <span className="brand-mark" aria-hidden="true">
-            <svg className="brand-mark-icon" viewBox="0 0 64 64" focusable="false">
-              <path className="brand-mark-gridline" d="M14 18H50M14 32H50M14 46H50" />
-              <path className="brand-mark-curve" d="M14 46C22 42 24 32 33 31C42 30 43 19 50 16" />
-              <circle className="brand-mark-node primary" cx="18" cy="43" r="4" />
-              <circle className="brand-mark-node" cx="33" cy="31" r="3.5" />
-              <circle className="brand-mark-node" cx="49" cy="17" r="4" />
-            </svg>
-          </span>
           <div>
             <p className="kicker">{copy.eyebrow}</p>
             <h1>{copy.name}</h1>
