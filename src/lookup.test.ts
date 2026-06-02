@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { ageGroupsForAge, findLookupResult, type LookupArtifact, type LookupRow } from "./lookup";
+import { ageGroupsForAge, findLookupResult, hasSiteData, type LookupArtifact, type LookupRow } from "./lookup";
 
 function row(key: string, matchingLevel: string, sampleSize: number): LookupRow {
   return {
@@ -104,5 +104,12 @@ describe("findLookupResult", () => {
     });
 
     expect(result).toBeNull();
+  });
+});
+
+describe("hasSiteData", () => {
+  it("reports whether the lookup artifact contains survival rows for a site", () => {
+    expect(hasSiteData(artifact([row("site_only|Any|Tongue|Any|Any|Any|Any|Any", "site_only", 91)]), "Tongue")).toBe(true);
+    expect(hasSiteData(artifact([row("site_only|Any|Tongue|Any|Any|Any|Any|Any", "site_only", 91)]), "Larynx")).toBe(false);
   });
 });

@@ -94,3 +94,7 @@ export function findLookupResult(artifact: LookupArtifact, inputs: LookupInputs)
   }
   return null;
 }
+
+export function hasSiteData(artifact: LookupArtifact, site: string): boolean {
+  return artifact.summary.sites.includes(site);
+}

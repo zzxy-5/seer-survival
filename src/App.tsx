@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { dataUrl } from "./data-path";
-import { findLookupResult, type LookupArtifact, type LookupInputs, type LookupResult, type LookupRow } from "./lookup";
+import { findLookupResult, hasSiteData, type LookupArtifact, type LookupInputs, type LookupResult, type LookupRow } from "./lookup";
 import {
   APP_COPY,
+  UI_COPY,
+  appCopy,
   displayLabel,
   formatMatchedKey,
   formatMedianSurvival,
   formatProbability,
+  type Language,
   matchingLevelLabel,
   qualityLabel,
 } from "./presentation";
@@ -64,13 +67,13 @@ async function loadJson<T>(path: string): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-function makeInputs(form: FormState): LookupInputs {
+function makeInputs(form: FormState, ui: (typeof UI_COPY)[Language]): LookupInputs {
   if (form.age.trim() === "") {
-    throw new Error("年龄不能为空");
+    throw new Error(ui.emptyAge);
   }
   const age = Number(form.age);
   if (!Number.isFinite(age)) {
-    throw new Error("年龄需要是数字");
+    throw new Error(ui.invalidAge);
   }
   return {
     sex: form.sex,
@@ -89,6 +92,9 @@ export default function App() {
   const [metadata, setMetadata] = useState<Metadata | null>(null);
   const [form, setForm] = useState<FormState>(defaultForm);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [language, setLanguage] = useState<Language>("zh");
+  const copy = appCopy(language);
+  const ui = UI_COPY[language];
 
   useEffect(() => {
     let cancelled = false;
@@ -128,12 +134,18 @@ export default function App() {
     if (!artifact || !form.sex || !form.site || !form.histologyGroup) {
       return { result: null, error: null };
     }
-    try {
-      return { result: findLookupResult(artifact, makeInputs(form)), error: null };
-    } catch (error: unknown) {
-      return { result: null, error: error instanceof Error ? error.message : "查询失败" };
+    if (!hasSiteData(artifact, form.site)) {
+      return {
+        result: null,
+        error: ui.missingSite(displayLabel(form.site, language)),
+      };
     }
-  }, [artifact, form]);
+    try {
+      return { result: findLookupResult(artifact, makeInputs(form, ui)), error: null };
+    } catch (error: unknown) {
+      return { result: null, error: error instanceof Error ? error.message : ui.lookupFailed };
+    }
+  }, [artifact, form, language, ui]);
 
   const updateForm = (field: keyof FormState, value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
@@ -144,97 +156,182 @@ export default function App() {
       <header className="masthead">
         <div className="brand-lockup">
           <span className="brand-mark" aria-hidden="true">
-            图谱
+            <svg className="brand-mark-icon" viewBox="0 0 64 64" focusable="false">
+              <path className="brand-mark-gridline" d="M14 18H50M14 32H50M14 46H50" />
+              <path className="brand-mark-curve" d="M14 46C22 42 24 32 33 31C42 30 43 19 50 16" />
+              <circle className="brand-mark-node primary" cx="18" cy="43" r="4" />
+              <circle className="brand-mark-node" cx="33" cy="31" r="3.5" />
+              <circle className="brand-mark-node" cx="49" cy="17" r="4" />
+            </svg>
           </span>
           <div>
-            <p className="kicker">{APP_COPY.eyebrow}</p>
-            <h1>{APP_COPY.name}</h1>
-            <p className="lede">{APP_COPY.description}</p>
+            <p className="kicker">{copy.eyebrow}</p>
+            <h1>{copy.name}</h1>
+            <p className="lede">{copy.description}</p>
           </div>
         </div>
-        <div className="status-strip">
-          {APP_COPY.statusBadges.map((badge) => (
-            <span key={badge}>{badge}</span>
-          ))}
+        <div className="masthead-actions">
+          <LanguageToggle language={language} onChange={setLanguage} />
+          <div className="status-strip">
+            {copy.statusBadges.map((badge) => (
+              <span key={badge}>{badge}</span>
+            ))}
+          </div>
         </div>
       </header>
 
-      <section className="workspace" aria-label="头颈肿瘤生存图谱工作区">
-        <section className="input-panel" aria-label="查询条件">
+      <section className="workspace" aria-label={ui.workspaceAria}>
+        <section className="input-panel" aria-label={ui.inputPanelAria}>
           <div className="panel-heading">
             <div>
-              <p className="panel-kicker">输入条件</p>
-              <h2>患者与肿瘤信息</h2>
+              <p className="panel-kicker">{ui.inputKicker}</p>
+              <h2>{ui.inputTitle}</h2>
             </div>
-            {metadata ? <p>{metadata.record_count.toLocaleString()} 条记录</p> : <p>加载中</p>}
+            {metadata ? (
+              <p>
+                {metadata.record_count.toLocaleString()} {ui.recordsUnit}
+              </p>
+            ) : (
+              <p>{ui.loading}</p>
+            )}
           </div>
 
           {loadError ? <div className="notice error">{loadError}</div> : null}
 
           {metadata ? (
-            <div className="meta-strip" aria-label="数据概览">
+            <div className="meta-strip" aria-label={ui.dataOverviewAria}>
               <div>
-                <span>有效记录</span>
+                <span>{ui.effectiveRecords}</span>
                 <strong>{metadata.record_count.toLocaleString()}</strong>
               </div>
               <div>
-                <span>可查询组合</span>
+                <span>{ui.lookupGroups}</span>
                 <strong>{metadata.lookup_rows.toLocaleString()}</strong>
               </div>
             </div>
           ) : null}
 
           <div className="control-grid">
-            <SelectField label="性别" value={form.sex} options={options?.sexes ?? []} onChange={(value) => updateForm("sex", value)} />
-            <SelectField label="肿瘤部位" value={form.site} options={options?.sites ?? []} onChange={(value) => updateForm("site", value)} />
+            <SelectField label={ui.sex} value={form.sex} options={options?.sexes ?? []} language={language} onChange={(value) => updateForm("sex", value)} />
+            <SiteSelectField
+              value={form.site}
+              options={options?.sites ?? []}
+              availableSites={artifact?.summary.sites ?? []}
+              language={language}
+              ui={ui}
+              onChange={(value) => updateForm("site", value)}
+            />
             <SelectField
-              label="组织学大类"
+              label={ui.histologyGroup}
               value={form.histologyGroup}
               options={options?.histology_groups ?? []}
+              language={language}
               onChange={(value) => updateForm("histologyGroup", value)}
             />
             <label className="field">
-              <span>年龄</span>
+              <span>{ui.age}</span>
               <input min="0" max="120" type="number" value={form.age} onChange={(event) => updateForm("age", event.target.value)} />
             </label>
           </div>
 
           <div className="tnm-grid">
-            <SelectField label="T" value={form.tStage} options={options?.t_stages ?? []} onChange={(value) => updateForm("tStage", value)} />
-            <SelectField label="N" value={form.nStage} options={options?.n_stages ?? []} onChange={(value) => updateForm("nStage", value)} />
-            <SelectField label="M" value={form.mStage} options={options?.m_stages ?? []} onChange={(value) => updateForm("mStage", value)} />
+            <SelectField label="T" value={form.tStage} options={options?.t_stages ?? []} language={language} onChange={(value) => updateForm("tStage", value)} />
+            <SelectField label="N" value={form.nStage} options={options?.n_stages ?? []} language={language} onChange={(value) => updateForm("nStage", value)} />
+            <SelectField label="M" value={form.mStage} options={options?.m_stages ?? []} language={language} onChange={(value) => updateForm("mStage", value)} />
           </div>
+
+          <TnmAnnotation copy={copy} />
+          <SourceAnnotation metadata={metadata} copy={copy} ui={ui} />
         </section>
 
-        <section className="result-panel" aria-label="生存参照结果">
+        <section className="result-panel" aria-label={ui.resultAria}>
           <div className="result-content">
             {lookup.error ? (
               <EmptyResult title={lookup.error} />
             ) : lookup.result ? (
-              <ResultView result={lookup.result} />
+              <ResultView result={lookup.result} language={language} ui={ui} />
             ) : artifact ? (
-              <EmptyResult title="没有对应生存分组" />
+              <EmptyResult title={ui.noGroup} />
             ) : (
-              <EmptyResult title="正在加载生存分组" />
+              <EmptyResult title={ui.loadingGroup} />
             )}
           </div>
-          <MethodBoundary />
+          <MethodBoundary copy={copy} />
         </section>
       </section>
     </main>
   );
 }
 
-function SelectField({ label, value, options, onChange }: { label: string; value: string; options: string[]; onChange: (value: string) => void }) {
+function LanguageToggle({ language, onChange }: { language: Language; onChange: (language: Language) => void }) {
+  return (
+    <div className="language-toggle" aria-label="Language">
+      <button type="button" aria-pressed={language === "zh"} onClick={() => onChange("zh")}>
+        中文
+      </button>
+      <button type="button" aria-pressed={language === "en"} onClick={() => onChange("en")}>
+        English
+      </button>
+    </div>
+  );
+}
+
+function SelectField({
+  label,
+  value,
+  options,
+  language,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: string[];
+  language: Language;
+  onChange: (value: string) => void;
+}) {
   return (
     <label className="field">
       <span>{label}</span>
       <select value={value} onChange={(event) => onChange(event.target.value)} disabled={options.length === 0}>
         {options.map((option) => (
           <option key={option} value={option}>
-            {displayLabel(option)}
+            {displayLabel(option, language)}
           </option>
         ))}
+      </select>
+    </label>
+  );
+}
+
+function SiteSelectField({
+  value,
+  options,
+  availableSites,
+  language,
+  ui,
+  onChange,
+}: {
+  value: string;
+  options: string[];
+  availableSites: string[];
+  language: Language;
+  ui: (typeof UI_COPY)[Language];
+  onChange: (value: string) => void;
+}) {
+  const available = new Set(availableSites);
+  return (
+    <label className="field">
+      <span>{ui.tumorSite}</span>
+      <select value={value} onChange={(event) => onChange(event.target.value)} disabled={options.length === 0}>
+        {options.map((option) => {
+          const isUnavailable = availableSites.length > 0 && !available.has(option);
+          return (
+            <option key={option} value={option} disabled={isUnavailable}>
+              {displayLabel(option, language)}
+              {isUnavailable ? ui.unavailable : ""}
+            </option>
+          );
+        })}
       </select>
     </label>
   );
@@ -248,12 +345,12 @@ function EmptyResult({ title }: { title: string }) {
   );
 }
 
-function MethodBoundary() {
+function TnmAnnotation({ copy }: { copy: typeof APP_COPY | typeof import("./presentation").APP_COPY_EN }) {
   return (
-    <section className="method-boundary" aria-labelledby="method-boundary-title">
-      <h2 id="method-boundary-title">{APP_COPY.method.title}</h2>
+    <section className="annotation-panel" aria-labelledby="tnm-note-title">
+      <h3 id="tnm-note-title">{copy.tnm.title}</h3>
       <ul>
-        {APP_COPY.method.points.map((point) => (
+        {copy.tnm.points.map((point) => (
           <li key={point}>{point}</li>
         ))}
       </ul>
@@ -261,41 +358,89 @@ function MethodBoundary() {
   );
 }
 
-function ResultView({ result }: { result: LookupResult }) {
+function SourceAnnotation({
+  metadata,
+  copy,
+  ui,
+}: {
+  metadata: Metadata | null;
+  copy: typeof APP_COPY | typeof import("./presentation").APP_COPY_EN;
+  ui: (typeof UI_COPY)[Language];
+}) {
+  return (
+    <section className="annotation-panel source-panel" aria-label={copy.source.title} aria-labelledby="source-note-title">
+      <h3 id="source-note-title">{copy.source.title}</h3>
+      <dl>
+        <div>
+          <dt>{ui.sourceFile}</dt>
+          <dd>{metadata ? metadata.source_file : ui.loading}</dd>
+        </div>
+        <div>
+          <dt>{ui.processedRows}</dt>
+          <dd>{metadata ? metadata.processed_rows.toLocaleString() : ui.loading}</dd>
+        </div>
+        <div>
+          <dt>{ui.includedRecords}</dt>
+          <dd>{metadata ? metadata.record_count.toLocaleString() : ui.loading}</dd>
+        </div>
+        <div>
+          <dt>{ui.skippedRecords}</dt>
+          <dd>{metadata ? metadata.skipped_rows.toLocaleString() : ui.loading}</dd>
+        </div>
+      </dl>
+      <p>{copy.source.note}</p>
+    </section>
+  );
+}
+
+function MethodBoundary({ copy }: { copy: typeof APP_COPY | typeof import("./presentation").APP_COPY_EN }) {
+  return (
+    <section className="method-boundary" aria-labelledby="method-boundary-title">
+      <h2 id="method-boundary-title">{copy.method.title}</h2>
+      <ul>
+        {copy.method.points.map((point) => (
+          <li key={point}>{point}</li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function ResultView({ result, language, ui }: { result: LookupResult; language: Language; ui: (typeof UI_COPY)[Language] }) {
   const row = result.row;
   return (
     <>
       <div className="result-topline">
         <div>
-          <p className="kicker">队列中位生存</p>
-          <h2>{formatMedianSurvival(row.median_survival_months)}</h2>
+          <p className="kicker">{ui.medianSurvival}</p>
+          <h2>{formatMedianSurvival(row.median_survival_months, language)}</h2>
         </div>
-        <span className={`quality ${row.data_quality_flag}`}>{qualityLabel(row.data_quality_flag)}</span>
+        <span className={`quality ${row.data_quality_flag}`}>{qualityLabel(row.data_quality_flag, language)}</span>
       </div>
 
       <div className="metric-grid">
-        <Metric label="12 月生存率" value={formatProbability(row.survival_12m)} />
-        <Metric label="36 月生存率" value={formatProbability(row.survival_36m)} />
-        <Metric label="60 月生存率" value={formatProbability(row.survival_60m)} />
-        <Metric label="样本量" value={row.sample_size.toLocaleString()} />
+        <Metric label={ui.survival12} value={formatProbability(row.survival_12m)} />
+        <Metric label={ui.survival36} value={formatProbability(row.survival_36m)} />
+        <Metric label={ui.survival60} value={formatProbability(row.survival_60m)} />
+        <Metric label={ui.sampleSize} value={row.sample_size.toLocaleString()} />
       </div>
 
-      <SurvivalCurve row={row} />
+      <SurvivalCurve row={row} ui={ui} />
 
       <dl className="detail-list">
         <div>
-          <dt>匹配层级</dt>
-          <dd>{matchingLevelLabel(row.matching_level)}</dd>
+          <dt>{ui.matchLevel}</dt>
+          <dd>{matchingLevelLabel(row.matching_level, language)}</dd>
         </div>
         <div>
-          <dt>事件 / 删失</dt>
+          <dt>{ui.eventsCensored}</dt>
           <dd>
             {row.event_count.toLocaleString()} / {row.censor_count.toLocaleString()}
           </dd>
         </div>
         <div>
-          <dt>匹配组合</dt>
-          <dd>{formatMatchedKey(result.matchedKey)}</dd>
+          <dt>{ui.matchedGroup}</dt>
+          <dd>{formatMatchedKey(result.matchedKey, language)}</dd>
         </div>
       </dl>
     </>
@@ -311,7 +456,7 @@ function Metric({ label, value }: { label: string; value: string }) {
   );
 }
 
-function SurvivalCurve({ row }: { row: LookupRow }) {
+function SurvivalCurve({ row, ui }: { row: LookupRow; ui: (typeof UI_COPY)[Language] }) {
   const maxMonth = Math.max(60, ...row.curve_months);
   const points = row.curve_months.map((month, index) => {
     const x = 8 + (month / maxMonth) * 84;
@@ -321,8 +466,8 @@ function SurvivalCurve({ row }: { row: LookupRow }) {
 
   return (
     <figure className="curve-panel">
-      <figcaption>Kaplan-Meier 生存曲线</figcaption>
-      <svg viewBox="0 0 100 100" role="img" aria-label="Kaplan-Meier 生存曲线">
+      <figcaption>{ui.kmCurve}</figcaption>
+      <svg viewBox="0 0 100 100" role="img" aria-label={ui.kmCurve}>
         <line className="grid-line" x1="8" y1="50" x2="94" y2="50" />
         <line className="axis-line" x1="8" y1="88" x2="94" y2="88" />
         <line className="axis-line" x1="8" y1="10" x2="8" y2="88" />
@@ -332,7 +477,7 @@ function SurvivalCurve({ row }: { row: LookupRow }) {
           0
         </text>
         <text x="84" y="97">
-          {maxMonth} 月
+          {maxMonth} {ui.monthSuffix}
         </text>
         <text x="0" y="15">
           100%

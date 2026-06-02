@@ -1,12 +1,44 @@
 import { describe, expect, it } from "vitest";
 
 import appSource from "./App.tsx?raw";
+import { UI_COPY } from "./presentation";
 
 describe("app interface copy", () => {
   it("uses user-facing data summary labels", () => {
-    expect(appSource).toContain("可查询组合");
-    expect(appSource).toContain("匹配组合");
+    expect(UI_COPY.zh.lookupGroups).toBe("可查询组合");
+    expect(UI_COPY.zh.matchedGroup).toBe("匹配组合");
+    expect(appSource).toContain("ui.lookupGroups");
+    expect(appSource).toContain("ui.matchedGroup");
     expect(appSource).not.toContain("查表");
     expect(appSource).not.toContain("匹配索引");
+  });
+
+  it("renders TNM source guidance and metadata-backed data provenance", () => {
+    expect(appSource).toContain("copy.tnm.points.map");
+    expect(appSource).toContain("metadata.source_file");
+    expect(appSource).toContain("copy.source.title");
+  });
+
+  it("uses primary tumor sites from the data and supports clearer missing-data errors", () => {
+    expect(appSource).toContain("SiteSelectField");
+    expect(appSource).toContain("ui.missingSite");
+    expect(UI_COPY.zh.missingSite("喉")).toContain("当前数据源没有");
+  });
+
+  it("renders a language toggle for Chinese and English", () => {
+    expect(appSource).toContain("language-toggle");
+    expect(appSource).toContain("setLanguage");
+    expect(appSource).toContain("English");
+    expect(appSource).toContain("中文");
+  });
+
+  it("does not reload data and reset the form when switching language", () => {
+    expect(appSource).not.toContain("[ui.lookupFailed]");
+  });
+
+  it("does not use a redundant text label inside the header mark", () => {
+    const markSource = appSource.match(/<span className="brand-mark" aria-hidden="true">([\s\S]*?)<\/span>/)?.[1] ?? "";
+    expect(markSource).not.toContain("图谱");
+    expect(markSource).toContain("brand-mark-icon");
   });
 });
