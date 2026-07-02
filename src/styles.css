@@ -624,48 +624,60 @@ h2 {
 .curve-panel svg {
   display: block;
   width: 100%;
-  height: 330px;
+  height: 300px;
   border: 1px solid rgba(23, 32, 29, 0.12);
   border-radius: 8px;
   background:
-    radial-gradient(circle at 18% 18%, rgba(38, 122, 121, 0.09), transparent 14rem),
-    linear-gradient(rgba(23, 32, 29, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(23, 32, 29, 0.045) 1px, transparent 1px),
+    linear-gradient(rgba(23, 32, 29, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(23, 32, 29, 0.035) 1px, transparent 1px),
     #fbfcf8;
   background-size:
-    auto,
-    16px 16px,
-    16px 16px,
+    18px 18px,
+    18px 18px,
     auto;
 }
 
 .grid-line {
-  stroke: rgba(23, 32, 29, 0.12);
-  stroke-dasharray: 2 2;
-  stroke-width: 0.45;
+  stroke: rgba(23, 32, 29, 0.09);
+  stroke-width: 0.32;
+}
+
+.reference-line {
+  stroke: rgba(23, 32, 29, 0.18);
+  stroke-dasharray: 1.2 1.6;
+  stroke-width: 0.42;
 }
 
 .axis-line {
-  stroke: rgba(23, 32, 29, 0.38);
-  stroke-width: 0.7;
+  stroke: rgba(23, 32, 29, 0.42);
+  stroke-width: 0.55;
 }
 
-.curve-fill {
-  fill: rgba(38, 122, 121, 0.14);
+.tick-line {
+  stroke: rgba(23, 32, 29, 0.36);
+  stroke-width: 0.42;
 }
 
 .curve-line {
   fill: none;
   stroke: var(--teal);
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 2.35;
+  stroke-linecap: butt;
+  stroke-linejoin: miter;
+  stroke-width: 1.65;
 }
 
 .curve-panel text {
   fill: var(--muted);
-  font-size: 4px;
-  font-weight: 750;
+  font-size: 3.2px;
+  font-weight: 820;
+}
+
+.curve-panel .x-label {
+  text-anchor: middle;
+}
+
+.curve-panel .y-label {
+  text-anchor: end;
 }
 
 .detail-list {
@@ -798,7 +810,7 @@ h2 {
   }
 
   .curve-panel svg {
-    height: 240px;
+    height: 220px;
   }
 
   .detail-list div {

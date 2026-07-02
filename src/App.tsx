@@ -468,31 +468,54 @@ function Metric({ label, value }: { label: string; value: string }) {
 }
 
 function SurvivalCurve({ row, ui }: { row: LookupRow; ui: (typeof UI_COPY)[Language] }) {
-  const maxMonth = Math.max(60, ...row.curve_months);
-  const points = row.curve_months.map((month, index) => {
-    const x = 8 + (month / maxMonth) * 84;
-    const y = 88 - row.curve_survival_probs[index] * 76;
-    return `${x.toFixed(2)},${y.toFixed(2)}`;
+  const chart = { left: 18, right: 154, top: 12, bottom: 86 };
+  const maxMonth = row.risk_60m < 10 ? 48 : 60;
+  const xScale = (month: number) => chart.left + (Math.min(month, maxMonth) / maxMonth) * (chart.right - chart.left);
+  const yScale = (probability: number) => chart.bottom - Math.max(0, Math.min(1, probability)) * (chart.bottom - chart.top);
+  const curvePoints = row.curve_months
+    .map((month, index) => ({ month, probability: row.curve_survival_probs[index] }))
+    .filter((point) => point.probability !== undefined && point.month <= maxMonth);
+  const lastPoint = curvePoints.at(-1) ?? { month: 0, probability: 1 };
+  const displayedPoints = lastPoint.month < maxMonth ? [...curvePoints, { month: maxMonth, probability: lastPoint.probability }] : curvePoints;
+  const lineCommands = displayedPoints.flatMap((point, index) => {
+    const x = xScale(point.month).toFixed(2);
+    const y = yScale(point.probability).toFixed(2);
+    if (index === 0) {
+      return [`M ${x} ${y}`];
+    }
+    return [`H ${x}`, `V ${y}`];
   });
+  const curvePath = lineCommands.join(" ");
+  const xTicks = [0, 12, 24, 36, 48, 60].filter((tick) => tick <= maxMonth);
+  const yTicks = [
+    { label: "100%", value: 1 },
+    { label: "50%", value: 0.5 },
+  ];
 
   return (
     <figure className="curve-panel">
       <figcaption>{ui.kmCurve}</figcaption>
-      <svg viewBox="0 0 100 100" role="img" aria-label={ui.kmCurve}>
-        <line className="grid-line" x1="8" y1="50" x2="94" y2="50" />
-        <line className="axis-line" x1="8" y1="88" x2="94" y2="88" />
-        <line className="axis-line" x1="8" y1="10" x2="8" y2="88" />
-        <polygon className="curve-fill" points={`${points.join(" ")} 92,88 8,88`} />
-        <polyline className="curve-line" points={points.join(" ")} />
-        <text x="7" y="97">
-          0
-        </text>
-        <text x="84" y="97">
-          {maxMonth} {ui.monthSuffix}
-        </text>
-        <text x="0" y="15">
-          100%
-        </text>
+      <svg viewBox="0 0 160 100" role="img" aria-label={ui.kmCurve}>
+        {xTicks.map((tick) => (
+          <g key={tick}>
+            <line className="grid-line vertical" x1={xScale(tick)} y1={chart.top} x2={xScale(tick)} y2={chart.bottom} />
+            <line className="tick-line" x1={xScale(tick)} y1={chart.bottom} x2={xScale(tick)} y2={chart.bottom + 1.8} />
+            <text className="axis-label x-label" x={xScale(tick)} y="94">
+              {tick === maxMonth ? `${tick} ${ui.monthSuffix}` : tick}
+            </text>
+          </g>
+        ))}
+        {yTicks.map((tick) => (
+          <g key={tick.label}>
+            <line className={tick.value === 0.5 ? "reference-line" : "grid-line"} x1={chart.left} y1={yScale(tick.value)} x2={chart.right} y2={yScale(tick.value)} />
+            <text className="axis-label y-label" x={chart.left - 2.4} y={yScale(tick.value) + 1.2}>
+              {tick.label}
+            </text>
+          </g>
+        ))}
+        <line className="axis-line" x1={chart.left} y1={chart.bottom} x2={chart.right} y2={chart.bottom} />
+        <line className="axis-line" x1={chart.left} y1={chart.top} x2={chart.left} y2={chart.bottom} />
+        <path className="curve-line" d={curvePath} />
       </svg>
     </figure>
   );
