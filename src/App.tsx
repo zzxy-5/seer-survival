@@ -7,6 +7,8 @@ import {
   UI_COPY,
   appCopy,
   displayLabel,
+  formatCaseCount,
+  formatFollowupMonths,
   formatMatchedKey,
   formatMedianSurvival,
   formatProbability,
@@ -116,7 +118,7 @@ export default function App() {
         setMetadata(nextMetadata);
         setForm({
           sex: preferred(nextOptions.sexes, "Male"),
-          site: preferred(nextOptions.sites, "Tongue"),
+          site: preferred(nextOptions.sites, "Hypopharynx"),
           histologyGroup: preferred(nextOptions.histology_groups, "8050-8089: squamous cell neoplasms"),
           age: "63",
           tStage: preferred(nextOptions.t_stages, "T2"),
@@ -408,9 +410,21 @@ function ResultView({ result, language, ui }: { result: LookupResult; language: 
   return (
     <>
       <div className="result-topline">
-        <div>
+        <div className="survival-summary">
           <p className="kicker">{ui.medianSurvival}</p>
           <h2>{formatMedianSurvival(row.median_survival_months, language)}</h2>
+          {row.median_survival_months === null ? <p className="median-note">{ui.medianNotReachedNote}</p> : null}
+          <p className="cohort-summary">
+            <span>
+              {ui.sampleSize} {formatCaseCount(row.sample_size, language)}
+            </span>
+            <span>
+              {ui.deaths} {formatCaseCount(row.event_count, language)}
+            </span>
+            <span>
+              {ui.medianFollowup} {formatFollowupMonths(row.median_followup_months, language)}
+            </span>
+          </p>
         </div>
         <span className={`quality ${row.data_quality_flag}`}>{qualityLabel(row.data_quality_flag, language)}</span>
       </div>
@@ -419,7 +433,7 @@ function ResultView({ result, language, ui }: { result: LookupResult; language: 
         <Metric label={ui.survival12} value={formatProbability(row.survival_12m)} />
         <Metric label={ui.survival36} value={formatProbability(row.survival_36m)} />
         <Metric label={ui.survival60} value={formatProbability(row.survival_60m)} />
-        <Metric label={ui.sampleSize} value={row.sample_size.toLocaleString()} />
+        <Metric label={ui.risk60} value={formatCaseCount(row.risk_60m, language)} />
       </div>
 
       <SurvivalCurve row={row} ui={ui} />

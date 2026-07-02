@@ -27,6 +27,8 @@ def _row_from_group(key: LookupKey, observations: list[tuple[int, bool]]) -> dic
         "event_count": km.event_count,
         "censor_count": km.censor_count,
         "median_survival_months": km.median_survival_months,
+        "median_followup_months": km.median_followup_months,
+        "risk_60m": km.risk_60m,
         "survival_12m": km.survival_12m,
         "survival_36m": km.survival_36m,
         "survival_60m": km.survival_60m,

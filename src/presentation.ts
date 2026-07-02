@@ -83,15 +83,19 @@ export const UI_COPY = {
     processedRows: "处理行数",
     includedRecords: "纳入记录",
     skippedRecords: "跳过记录",
-    medianSurvival: "队列中位生存",
-    survival12: "12 月生存率",
-    survival36: "36 月生存率",
-    survival60: "60 月生存率",
+    medianSurvival: "中位总生存期（OS）",
+    medianNotReachedNote: "截至最后随访，生存曲线尚未下降至 50%",
+    survival12: "1年生存率",
+    survival36: "3年生存率",
+    survival60: "5年生存率",
+    medianFollowup: "中位随访",
+    deaths: "死亡事件",
+    risk60: "60个月在险人数",
     sampleSize: "样本量",
     matchLevel: "匹配层级",
     eventsCensored: "事件 / 删失",
     matchedGroup: "匹配组合",
-    kmCurve: "Kaplan-Meier 生存曲线",
+    kmCurve: "Kaplan–Meier 生存曲线",
     monthSuffix: "月",
   },
   en: {
@@ -120,10 +124,14 @@ export const UI_COPY = {
     processedRows: "Processed rows",
     includedRecords: "Included records",
     skippedRecords: "Skipped records",
-    medianSurvival: "Cohort median survival",
-    survival12: "12-mo survival",
-    survival36: "36-mo survival",
-    survival60: "60-mo survival",
+    medianSurvival: "Median overall survival (OS)",
+    medianNotReachedNote: "At last follow-up, the survival curve had not declined to 50%",
+    survival12: "1-yr survival",
+    survival36: "3-yr survival",
+    survival60: "5-yr survival",
+    medianFollowup: "Median follow-up",
+    deaths: "Deaths",
+    risk60: "60-mo at risk",
     sampleSize: "Sample size",
     matchLevel: "Match level",
     eventsCensored: "Events / censored",
@@ -183,7 +191,17 @@ export function formatMedianSurvival(months: number | null, language: Language =
   if (language === "en") {
     return months === null ? "Not reached" : `${months} mo`;
   }
-  return months === null ? "未达到" : `${months} 月`;
+  return months === null ? "尚未达到" : `${months} 月`;
+}
+
+export function formatFollowupMonths(months: number, language: Language = "zh"): string {
+  const value = (Math.round(months * 10) / 10).toFixed(1);
+  return language === "en" ? `${value} mo` : `${value}个月`;
+}
+
+export function formatCaseCount(count: number, language: Language = "zh"): string {
+  const value = count.toLocaleString();
+  return language === "en" ? value : `${value}例`;
 }
 
 export function displayLabel(value: string, language: Language = "zh"): string {

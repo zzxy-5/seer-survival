@@ -17,6 +17,8 @@ function row(key: string, matchingLevel: string, sampleSize: number): LookupRow 
     event_count: 4,
     censor_count: sampleSize - 4,
     median_survival_months: null,
+    median_followup_months: 48.6,
+    risk_60m: 42,
     survival_12m: 0.91,
     survival_36m: 0.74,
     survival_60m: 0.63,

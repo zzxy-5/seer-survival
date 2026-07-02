@@ -7,8 +7,12 @@ describe("app interface copy", () => {
   it("uses user-facing data summary labels", () => {
     expect(UI_COPY.zh.lookupGroups).toBe("可查询组合");
     expect(UI_COPY.zh.matchedGroup).toBe("匹配组合");
+    expect(UI_COPY.zh.medianSurvival).toBe("中位总生存期（OS）");
+    expect(UI_COPY.zh.medianNotReachedNote).toBe("截至最后随访，生存曲线尚未下降至 50%");
+    expect(UI_COPY.zh.risk60).toBe("60个月在险人数");
     expect(appSource).toContain("ui.lookupGroups");
     expect(appSource).toContain("ui.matchedGroup");
+    expect(appSource).toContain("ui.medianNotReachedNote");
     expect(appSource).not.toContain("查表");
     expect(appSource).not.toContain("匹配索引");
   });

@@ -15,6 +15,8 @@ class KaplanMeierTests(unittest.TestCase):
         self.assertAlmostEqual(result.curve_survival_probs[1], 0.75)
         self.assertAlmostEqual(result.curve_survival_probs[2], 0.375)
         self.assertEqual(result.median_survival_months, 3)
+        self.assertEqual(result.median_followup_months, 2.5)
+        self.assertEqual(result.risk_60m, 0)
 
     def test_median_not_reached(self):
         result = kaplan_meier([(10, False), (20, True), (30, False), (40, False)])
@@ -41,6 +43,12 @@ class KaplanMeierTests(unittest.TestCase):
         result = kaplan_meier([(12, True), (24, False)])
 
         self.assertAlmostEqual(result.survival_12m, 0.5)
+
+    def test_followup_summary_and_risk_set_are_reported(self):
+        result = kaplan_meier([(12, False), (60, False), (72, True), (83, False)])
+
+        self.assertEqual(result.median_followup_months, 66.0)
+        self.assertEqual(result.risk_60m, 3)
 
     def test_empty_observations_raise(self):
         with self.assertRaises(ValueError):

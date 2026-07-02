@@ -43,6 +43,9 @@ class LookupBuilderTests(unittest.TestCase):
         levels = {row["matching_level"] for row in artifact["rows"]}
 
         self.assertEqual(levels, {"full", "no_sex", "no_histology", "coarse_age", "site_tnm", "site_m", "site_only"})
+        full_row = self._first_full_row(artifact)
+        self.assertEqual(full_row["median_followup_months"], 12.0)
+        self.assertEqual(full_row["risk_60m"], 0)
         validate_lookup_artifact(artifact)
 
     def test_index_points_to_rows(self):

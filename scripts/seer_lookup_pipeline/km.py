@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections import Counter
 from dataclasses import dataclass
+from statistics import median
 
 
 @dataclass(frozen=True)
@@ -10,6 +11,8 @@ class KMResult:
     event_count: int
     censor_count: int
     median_survival_months: int | None
+    median_followup_months: float
+    risk_60m: int
     survival_12m: float
     survival_36m: float
     survival_60m: float
@@ -44,7 +47,7 @@ def kaplan_meier(observations: list[tuple[int, bool]]) -> KMResult:
     survival = 1.0
     curve_months = [0]
     curve_survival_probs = [1.0]
-    median = None
+    median_survival = None
 
     for month in months:
         events = event_counts[month]
@@ -54,8 +57,8 @@ def kaplan_meier(observations: list[tuple[int, bool]]) -> KMResult:
             rounded_survival = round(survival, 6)
             curve_months.append(month)
             curve_survival_probs.append(rounded_survival)
-            if median is None and survival <= 0.5:
-                median = month
+            if median_survival is None and survival <= 0.5:
+                median_survival = month
         at_risk -= events + censored
         if at_risk <= 0:
             break
@@ -64,7 +67,9 @@ def kaplan_meier(observations: list[tuple[int, bool]]) -> KMResult:
         sample_size=sample_size,
         event_count=sum(event_counts.values()),
         censor_count=sum(censor_counts.values()),
-        median_survival_months=median,
+        median_survival_months=median_survival,
+        median_followup_months=round(float(median(month for month, _event in observations)), 1),
+        risk_60m=sum(1 for month, _event in observations if month >= 60),
         survival_12m=round(_survival_at(curve_months, curve_survival_probs, 12), 6),
         survival_36m=round(_survival_at(curve_months, curve_survival_probs, 36), 6),
         survival_60m=round(_survival_at(curve_months, curve_survival_probs, 60), 6),

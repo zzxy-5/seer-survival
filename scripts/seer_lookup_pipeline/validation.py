@@ -19,6 +19,10 @@ def validate_lookup_artifact(artifact: dict[str, Any]) -> None:
             raise ValueError(f"Index points to wrong row for {row['key']}")
         if row["sample_size"] != row["event_count"] + row["censor_count"]:
             raise ValueError(f"Sample count mismatch for {row['key']}")
+        if row["median_followup_months"] < 0:
+            raise ValueError(f"Median follow-up must be non-negative for {row['key']}")
+        if not 0 <= row["risk_60m"] <= row["sample_size"]:
+            raise ValueError(f"60-month risk set must be within sample size for {row['key']}")
         for field in ["survival_12m", "survival_36m", "survival_60m"]:
             _assert_probability(row[field], field)
         probs = row["curve_survival_probs"]

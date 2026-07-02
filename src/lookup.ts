@@ -14,6 +14,8 @@ export type LookupRow = {
   event_count: number;
   censor_count: number;
   median_survival_months: number | null;
+  median_followup_months: number;
+  risk_60m: number;
   survival_12m: number;
   survival_36m: number;
   survival_60m: number;

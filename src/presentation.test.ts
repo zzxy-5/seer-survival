@@ -4,6 +4,8 @@ import {
   APP_COPY,
   APP_COPY_EN,
   displayLabel,
+  formatCaseCount,
+  formatFollowupMonths,
   formatMatchedKey,
   formatMedianSurvival,
   formatProbability,
@@ -19,9 +21,16 @@ describe("presentation helpers", () => {
 
   it("formats median survival months", () => {
     expect(formatMedianSurvival(42)).toBe("42 月");
-    expect(formatMedianSurvival(null)).toBe("未达到");
+    expect(formatMedianSurvival(null)).toBe("尚未达到");
     expect(formatMedianSurvival(42, "en")).toBe("42 mo");
     expect(formatMedianSurvival(null, "en")).toBe("Not reached");
+  });
+
+  it("formats follow-up months and case counts", () => {
+    expect(formatFollowupMonths(48.64)).toBe("48.6个月");
+    expect(formatFollowupMonths(48.64, "en")).toBe("48.6 mo");
+    expect(formatCaseCount(42)).toBe("42例");
+    expect(formatCaseCount(1234, "en")).toBe("1,234");
   });
 
   it("labels quality and fallback levels", () => {
