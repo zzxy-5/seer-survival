@@ -1,5 +1,7 @@
 export type DataQualityFlag = "stable" | "small_sample" | "very_small_sample";
 
+export type ConfidenceInterval = [number, number];
+
 export type LookupRow = {
   key: string;
   matching_level: string;
@@ -16,11 +18,19 @@ export type LookupRow = {
   median_survival_months: number | null;
   median_followup_months: number;
   risk_60m: number;
+  risk_table_months: number[];
+  risk_table_counts: number[];
   survival_12m: number;
+  survival_12m_ci: ConfidenceInterval;
   survival_36m: number;
+  survival_36m_ci: ConfidenceInterval;
   survival_60m: number;
+  survival_60m_ci: ConfidenceInterval;
   curve_months: number[];
   curve_survival_probs: number[];
+  curve_ci_lower_probs: number[];
+  curve_ci_upper_probs: number[];
+  censor_months: number[];
   data_quality_flag: DataQualityFlag;
 };
 
@@ -30,6 +40,10 @@ export type LookupArtifact = {
   thresholds: {
     minimum_sample: number;
     stable_sample: number;
+  };
+  confidence_interval: {
+    level: number;
+    method: string;
   };
   rows: LookupRow[];
   index: Record<string, number>;
@@ -73,6 +87,10 @@ export function buildLookupKeys(inputs: LookupInputs): string[] {
   return [
     ["full", inputs.sex, inputs.site, inputs.histologyGroup, ageGroups.fine, inputs.tStage, inputs.nStage, inputs.mStage],
     ["no_sex", "Any", inputs.site, inputs.histologyGroup, ageGroups.fine, inputs.tStage, inputs.nStage, inputs.mStage],
+    ["site_histology_coarse_age", "Any", inputs.site, inputs.histologyGroup, ageGroups.coarse, inputs.tStage, inputs.nStage, inputs.mStage],
+    ["site_histology_tnm", "Any", inputs.site, inputs.histologyGroup, "Any", inputs.tStage, inputs.nStage, inputs.mStage],
+    ["site_histology_m", "Any", inputs.site, inputs.histologyGroup, "Any", "Any", "Any", inputs.mStage],
+    ["site_histology", "Any", inputs.site, inputs.histologyGroup, "Any", "Any", "Any", "Any"],
     ["no_histology", "Any", inputs.site, "Any", ageGroups.fine, inputs.tStage, inputs.nStage, inputs.mStage],
     ["coarse_age", "Any", inputs.site, "Any", ageGroups.coarse, inputs.tStage, inputs.nStage, inputs.mStage],
     ["site_tnm", "Any", inputs.site, "Any", "Any", inputs.tStage, inputs.nStage, inputs.mStage],

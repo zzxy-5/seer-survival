@@ -6,6 +6,10 @@ from typing import Literal
 MatchingLevel = Literal[
     "full",
     "no_sex",
+    "site_histology_coarse_age",
+    "site_histology_tnm",
+    "site_histology_m",
+    "site_histology",
     "no_histology",
     "coarse_age",
     "site_tnm",

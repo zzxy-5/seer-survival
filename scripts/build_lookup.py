@@ -47,6 +47,7 @@ def build_metadata(
         "skipped_reasons": dict(sorted(skipped_reasons.items())),
         "lookup_rows": artifact["summary"]["row_count"],
         "thresholds": artifact["thresholds"],
+        "confidence_interval": artifact["confidence_interval"],
         "runtime_mode": "static_lookup_only",
     }
 
@@ -86,8 +87,8 @@ def main() -> None:
         json.dumps(artifact, ensure_ascii=False, separators=(",", ":")),
         encoding="utf-8",
     )
-    (output_dir / "options.json").write_text(json.dumps(build_options(artifact), ensure_ascii=False, indent=2), encoding="utf-8")
-    (output_dir / "metadata.json").write_text(json.dumps(metadata, ensure_ascii=False, indent=2), encoding="utf-8")
+    (output_dir / "options.json").write_text(json.dumps(build_options(artifact), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    (output_dir / "metadata.json").write_text(json.dumps(metadata, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(metadata, ensure_ascii=False, indent=2))
 
 

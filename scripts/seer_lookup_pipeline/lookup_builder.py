@@ -29,11 +29,19 @@ def _row_from_group(key: LookupKey, observations: list[tuple[int, bool]]) -> dic
         "median_survival_months": km.median_survival_months,
         "median_followup_months": km.median_followup_months,
         "risk_60m": km.risk_60m,
+        "risk_table_months": km.risk_table_months,
+        "risk_table_counts": km.risk_table_counts,
         "survival_12m": km.survival_12m,
+        "survival_12m_ci": km.survival_12m_ci,
         "survival_36m": km.survival_36m,
+        "survival_36m_ci": km.survival_36m_ci,
         "survival_60m": km.survival_60m,
+        "survival_60m_ci": km.survival_60m_ci,
         "curve_months": km.curve_months,
         "curve_survival_probs": km.curve_survival_probs,
+        "curve_ci_lower_probs": km.curve_ci_lower_probs,
+        "curve_ci_upper_probs": km.curve_ci_upper_probs,
+        "censor_months": km.censor_months,
         "data_quality_flag": quality,
     }
 
@@ -55,9 +63,10 @@ def build_lookup_artifact(records: list[NormalizedRecord]) -> dict[str, Any]:
     index = {row["key"]: position for position, row in enumerate(rows)}
 
     return {
-        "version": 1,
+        "version": 3,
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "thresholds": {"minimum_sample": 20, "stable_sample": 50},
+        "confidence_interval": {"level": 0.95, "method": "Greenwood log-log"},
         "rows": rows,
         "index": index,
         "summary": {

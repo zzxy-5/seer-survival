@@ -10,10 +10,14 @@
   "skipped_reasons": {
     "ValueError: Invalid survival months: Unknown": 216
   },
-  "lookup_rows": 9483,
+  "lookup_rows": 12705,
   "thresholds": {
     "minimum_sample": 20,
     "stable_sample": 50
+  },
+  "confidence_interval": {
+    "level": 0.95,
+    "method": "Greenwood log-log"
   },
   "runtime_mode": "static_lookup_only"
 }

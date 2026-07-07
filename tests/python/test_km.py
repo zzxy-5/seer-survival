@@ -14,16 +14,26 @@ class KaplanMeierTests(unittest.TestCase):
         self.assertAlmostEqual(result.curve_survival_probs[0], 1.0)
         self.assertAlmostEqual(result.curve_survival_probs[1], 0.75)
         self.assertAlmostEqual(result.curve_survival_probs[2], 0.375)
+        self.assertAlmostEqual(result.curve_ci_lower_probs[1], 0.127947)
+        self.assertAlmostEqual(result.curve_ci_upper_probs[1], 0.960549)
+        self.assertAlmostEqual(result.survival_12m_ci[0], 0.010971)
+        self.assertAlmostEqual(result.survival_12m_ci[1], 0.808001)
         self.assertEqual(result.median_survival_months, 3)
         self.assertEqual(result.median_followup_months, 2.5)
         self.assertEqual(result.risk_60m, 0)
+        self.assertEqual(result.risk_table_months, [0, 12, 24, 36, 48, 60])
+        self.assertEqual(result.risk_table_counts, [4, 0, 0, 0, 0, 0])
+        self.assertEqual(result.censor_months, [2, 4])
 
     def test_median_not_reached(self):
         result = kaplan_meier([(10, False), (20, True), (30, False), (40, False)])
 
         self.assertIsNone(result.median_survival_months)
         self.assertGreater(result.survival_12m, 0.0)
+        self.assertEqual(result.survival_12m_ci, (1.0, 1.0))
         self.assertGreater(result.survival_36m, 0.0)
+        self.assertLess(result.survival_36m_ci[0], result.survival_36m)
+        self.assertGreater(result.survival_36m_ci[1], result.survival_36m)
 
     def test_zero_month_event_is_supported(self):
         result = kaplan_meier([(0, True), (5, False)])
@@ -38,6 +48,7 @@ class KaplanMeierTests(unittest.TestCase):
         self.assertAlmostEqual(result.curve_survival_probs[1], 0.75)
         self.assertAlmostEqual(result.curve_survival_probs[2], 0.0)
         self.assertEqual(result.survival_12m, 0.0)
+        self.assertEqual(result.censor_months, [5])
 
     def test_exact_horizon_event_is_included(self):
         result = kaplan_meier([(12, True), (24, False)])
@@ -49,6 +60,7 @@ class KaplanMeierTests(unittest.TestCase):
 
         self.assertEqual(result.median_followup_months, 66.0)
         self.assertEqual(result.risk_60m, 3)
+        self.assertEqual(result.risk_table_counts, [4, 4, 3, 3, 3, 3])
 
     def test_empty_observations_raise(self):
         with self.assertRaises(ValueError):
@@ -60,7 +72,11 @@ class KaplanMeierTests(unittest.TestCase):
         self.assertIsNone(result.median_survival_months)
         self.assertEqual(result.curve_months, [0])
         self.assertEqual(result.curve_survival_probs, [1.0])
+        self.assertEqual(result.curve_ci_lower_probs, [1.0])
+        self.assertEqual(result.curve_ci_upper_probs, [1.0])
         self.assertEqual(result.survival_60m, 1.0)
+        self.assertEqual(result.survival_60m_ci, (1.0, 1.0))
+        self.assertEqual(result.censor_months, [10, 20])
 
     def test_all_events_at_one_month(self):
         result = kaplan_meier([(8, True), (8, True), (8, True)])
@@ -68,6 +84,7 @@ class KaplanMeierTests(unittest.TestCase):
         self.assertEqual(result.median_survival_months, 8)
         self.assertEqual(result.curve_months, [0, 8])
         self.assertAlmostEqual(result.curve_survival_probs[1], 0.0)
+        self.assertEqual(result.survival_12m_ci, (0.0, 0.0))
 
 
 if __name__ == "__main__":

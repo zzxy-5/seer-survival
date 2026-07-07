@@ -85,10 +85,27 @@ class NormalizationTests(unittest.TestCase):
         record = normalize_record(self._source_row("2016", seer=("T2", "N1", "M0")))
         keys = matching_keys(record)
 
-        self.assertEqual([key.matching_level for key in keys], ["full", "no_sex", "no_histology", "coarse_age", "site_tnm", "site_m", "site_only"])
+        self.assertEqual(
+            [key.matching_level for key in keys],
+            [
+                "full",
+                "no_sex",
+                "site_histology_coarse_age",
+                "site_histology_tnm",
+                "site_histology_m",
+                "site_histology",
+                "no_histology",
+                "coarse_age",
+                "site_tnm",
+                "site_m",
+                "site_only",
+            ],
+        )
         self.assertEqual(key_to_string(keys[0]), "full|Male|Tongue|8050-8089: squamous cell neoplasms|60-69|T2|N1|M0")
-        self.assertEqual(key_to_string(keys[5]), "site_m|Any|Tongue|Any|Any|Any|Any|M0")
-        self.assertEqual(key_to_string(keys[6]), "site_only|Any|Tongue|Any|Any|Any|Any|Any")
+        self.assertEqual(key_to_string(keys[2]), "site_histology_coarse_age|Any|Tongue|8050-8089: squamous cell neoplasms|60-69|T2|N1|M0")
+        self.assertEqual(key_to_string(keys[4]), "site_histology_m|Any|Tongue|8050-8089: squamous cell neoplasms|Any|Any|Any|M0")
+        self.assertEqual(key_to_string(keys[9]), "site_m|Any|Tongue|Any|Any|Any|Any|M0")
+        self.assertEqual(key_to_string(keys[10]), "site_only|Any|Tongue|Any|Any|Any|Any|Any")
 
     def _source_row(self, year, ajcc=("T1", "N0", "M0"), seer=("Blank(s)", "Blank(s)", "Blank(s)")):
         return {

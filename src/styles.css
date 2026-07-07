@@ -540,6 +540,17 @@ h2 {
   content: "·";
 }
 
+.match-note {
+  margin: 14px 0 0;
+  border-left: 4px solid rgba(217, 174, 78, 0.72);
+  background: rgba(255, 248, 231, 0.72);
+  color: #655030;
+  padding: 10px 12px;
+  font-size: 0.86rem;
+  font-weight: 820;
+  line-height: 1.5;
+}
+
 .result-topline .quality {
   flex: 0 0 auto;
 }
@@ -570,7 +581,7 @@ h2 {
 }
 
 .metric {
-  min-height: 108px;
+  min-height: 124px;
   border: 1px solid rgba(23, 32, 29, 0.12);
   border-radius: 8px;
   background:
@@ -581,10 +592,19 @@ h2 {
 
 .metric strong {
   display: block;
-  margin-top: 12px;
+  margin-top: 10px;
   color: var(--ink);
   font-size: clamp(1.35rem, 2.7vw, 2.18rem);
   line-height: 1;
+}
+
+.metric small {
+  display: block;
+  margin-top: 10px;
+  color: #59635f;
+  font-size: 0.78rem;
+  font-weight: 820;
+  line-height: 1.35;
 }
 
 .metric:nth-child(1) {
@@ -599,6 +619,27 @@ h2 {
   border-top-color: rgba(236, 101, 71, 0.42);
 }
 
+.metric--note,
+.metric--warning {
+  background: #fbfcf9;
+}
+
+.metric--note strong,
+.metric--warning strong {
+  font-size: clamp(1rem, 1.7vw, 1.28rem);
+  line-height: 1.28;
+}
+
+.metric--warning {
+  border-color: rgba(138, 91, 9, 0.26);
+  border-top-color: rgba(138, 91, 9, 0.5);
+  background: #fffaf0;
+}
+
+.metric--warning small {
+  color: #74500d;
+}
+
 .curve-panel {
   margin: 22px 0 0;
 }
@@ -606,6 +647,8 @@ h2 {
 .curve-panel figcaption {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 10px;
   color: #33413c;
@@ -614,6 +657,7 @@ h2 {
 }
 
 .curve-panel figcaption::before {
+  flex: 0 0 auto;
   width: 22px;
   height: 3px;
   border-radius: 999px;
@@ -621,55 +665,87 @@ h2 {
   content: "";
 }
 
-.curve-panel svg {
-  display: block;
-  width: 100%;
-  height: 300px;
-  border: 1px solid rgba(23, 32, 29, 0.12);
-  border-radius: 8px;
-  background:
-    linear-gradient(rgba(23, 32, 29, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(23, 32, 29, 0.035) 1px, transparent 1px),
-    #fbfcf8;
-  background-size:
-    18px 18px,
-    18px 18px,
-    auto;
+.curve-legend {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-left: auto;
+  color: #5c6964;
+  font-size: 0.76rem;
+  font-weight: 820;
 }
 
-.grid-line {
-  stroke: rgba(23, 32, 29, 0.09);
-  stroke-width: 0.32;
+.curve-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.legend-censor::before {
+  width: 2px;
+  height: 11px;
+  border-radius: 999px;
+  background: #0f766f;
+  content: "";
+}
+
+.curve-panel svg {
+  display: block;
+  width: min(100%, 740px);
+  height: auto;
+  border: 1px solid rgba(23, 32, 29, 0.16);
+  border-radius: 8px;
+  background: #fff;
 }
 
 .reference-line {
-  stroke: rgba(23, 32, 29, 0.18);
-  stroke-dasharray: 1.2 1.6;
-  stroke-width: 0.42;
-}
-
-.axis-line {
-  stroke: rgba(23, 32, 29, 0.42);
+  stroke: rgba(17, 17, 17, 0.12);
   stroke-width: 0.55;
 }
 
-.tick-line {
-  stroke: rgba(23, 32, 29, 0.36);
-  stroke-width: 0.42;
+.reference-line--median {
+  stroke-dasharray: 3 3;
+}
+
+.median-helper-line {
+  stroke: rgba(217, 174, 78, 0.88);
+  stroke-dasharray: 2.4 2.4;
+  stroke-linecap: round;
+  stroke-width: 0.95;
+}
+
+.axis-line {
+  stroke: #111;
+  stroke-width: 0.85;
+}
+
+.tick-line,
+.y-tick-line {
+  stroke: #111;
+  stroke-width: 0.65;
 }
 
 .curve-line {
   fill: none;
-  stroke: var(--teal);
-  stroke-linecap: butt;
-  stroke-linejoin: miter;
-  stroke-width: 1.65;
+  opacity: 0.88;
+  stroke: #2b7f7d;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.75;
+}
+
+.censor-mark {
+  stroke: #0f766f;
+  stroke-linecap: round;
+  stroke-width: 1.15;
 }
 
 .curve-panel text {
-  fill: var(--muted);
-  font-size: 3.2px;
-  font-weight: 820;
+  fill: #111;
+  font-size: 4px;
+  font-weight: 600;
 }
 
 .curve-panel .x-label {
@@ -678,6 +754,40 @@ h2 {
 
 .curve-panel .y-label {
   text-anchor: end;
+}
+
+.curve-panel .axis-title {
+  fill: #111;
+  font-size: 4.05px;
+  font-weight: 680;
+}
+
+.curve-panel .x-axis-title {
+  text-anchor: middle;
+}
+
+.curve-panel .y-axis-title {
+  text-anchor: middle;
+}
+
+.median-label {
+  fill: #796019;
+  font-size: 3px;
+  font-weight: 760;
+}
+
+.risk-table-label {
+  fill: #111;
+  font-size: 3.7px;
+  font-weight: 720;
+  text-anchor: end;
+}
+
+.risk-table-count {
+  fill: #111;
+  font-size: 3.7px;
+  font-weight: 680;
+  text-anchor: middle;
 }
 
 .detail-list {
@@ -810,7 +920,20 @@ h2 {
   }
 
   .curve-panel svg {
-    height: 220px;
+    width: 100%;
+  }
+
+  .curve-panel text {
+    font-size: 5.3px;
+  }
+
+  .curve-panel .axis-title {
+    font-size: 5px;
+  }
+
+  .risk-table-label,
+  .risk-table-count {
+    font-size: 4.8px;
   }
 
   .detail-list div {

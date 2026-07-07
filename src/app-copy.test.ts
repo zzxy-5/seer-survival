@@ -10,8 +10,10 @@ describe("app interface copy", () => {
     expect(UI_COPY.zh.medianSurvival).toBe("中位总生存期（OS）");
     expect(UI_COPY.zh.medianNotReachedNote).toBe("截至最后随访，生存曲线尚未下降至 50%");
     expect(UI_COPY.zh.risk60).toBe("60个月在险人数");
+    expect(UI_COPY.zh.histologyIgnoredNotice).toContain("未使用所选组织学");
     expect(appSource).toContain("ui.lookupGroups");
     expect(appSource).toContain("ui.matchedGroup");
+    expect(appSource).toContain("ui.histologyIgnoredNotice");
     expect(appSource).toContain("ui.medianNotReachedNote");
     expect(appSource).not.toContain("查表");
     expect(appSource).not.toContain("匹配索引");

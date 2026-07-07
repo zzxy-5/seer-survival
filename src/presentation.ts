@@ -1,4 +1,4 @@
-import type { DataQualityFlag } from "./lookup";
+import type { ConfidenceInterval, DataQualityFlag } from "./lookup";
 
 export type Language = "zh" | "en";
 
@@ -11,6 +11,7 @@ export const APP_COPY = {
     title: "方法与边界",
     points: [
       "基于 SEER 队列中相似病例组的统计生存结果。",
+      "生存率区间为离线计算的 Greenwood log-log 95% 置信区间。",
       "展示队列层面的生存参照，不是个人预后预测。",
       "不用于临床决策，具体诊疗需要结合医生判断。",
     ],
@@ -38,6 +39,7 @@ export const APP_COPY_EN = {
     title: "Method & Limits",
     points: [
       "Based on statistical survival results from similar case groups in the SEER cohort.",
+      "Survival intervals are offline-computed Greenwood log-log 95% confidence intervals.",
       "Shows cohort-level survival reference values, not an individual prognosis prediction.",
       "Not for clinical decision-making; diagnosis and treatment require physician judgment.",
     ],
@@ -91,11 +93,21 @@ export const UI_COPY = {
     medianFollowup: "中位随访",
     deaths: "死亡事件",
     risk60: "60个月在险人数",
+    risk60Short: "60个月在险",
+    followupHint: "随访提示",
+    risk60Caution: "5年估计谨慎解释",
+    risk60Context: "用于判断5年估计稳定性",
     sampleSize: "样本量",
     matchLevel: "匹配层级",
     eventsCensored: "事件 / 删失",
     matchedGroup: "匹配组合",
+    histologyIgnoredNotice: "当前结果未使用所选组织学；因该组合样本不足，已退到不限定组织学的相似病例组。",
     kmCurve: "Kaplan–Meier 生存曲线",
+    overallSurvivalAxis: "Overall Survival (%)",
+    numberAtRisk: "Number at risk",
+    medianMarker: "Median",
+    confidenceBand: "95% 置信区间",
+    censorMarkers: "删失标记",
     monthSuffix: "月",
   },
   en: {
@@ -132,11 +144,21 @@ export const UI_COPY = {
     medianFollowup: "Median follow-up",
     deaths: "Deaths",
     risk60: "60-mo at risk",
+    risk60Short: "60-mo at risk",
+    followupHint: "Follow-up note",
+    risk60Caution: "Interpret the 5-year estimate cautiously",
+    risk60Context: "Helps judge stability of the 5-year estimate",
     sampleSize: "Sample size",
     matchLevel: "Match level",
     eventsCensored: "Events / censored",
     matchedGroup: "Matched group",
+    histologyIgnoredNotice: "The selected histology was not used in this result; the lookup fell back to a broader group because this combination has limited data.",
     kmCurve: "Kaplan-Meier survival curve",
+    overallSurvivalAxis: "Overall Survival (%)",
+    numberAtRisk: "Number at risk",
+    medianMarker: "Median",
+    confidenceBand: "95% CI",
+    censorMarkers: "Censor marks",
     monthSuffix: "mo",
   },
 } as const;
@@ -187,6 +209,14 @@ export function formatProbability(value: number): string {
   return `${Math.round(value * 1000) / 10}%`;
 }
 
+function formatProbabilityFixedOne(value: number): string {
+  return `${(Math.round(value * 1000) / 10).toFixed(1)}%`;
+}
+
+export function formatConfidenceInterval(interval: ConfidenceInterval): string {
+  return `95% CI ${formatProbabilityFixedOne(interval[0])}-${formatProbabilityFixedOne(interval[1])}`;
+}
+
 export function formatMedianSurvival(months: number | null, language: Language = "zh"): string {
   if (language === "en") {
     return months === null ? "Not reached" : `${months} mo`;
@@ -234,6 +264,10 @@ export function matchingLevelLabel(level: string, language: Language = "zh"): st
   const labelsZh: Record<string, string> = {
     full: "完全匹配",
     no_sex: "忽略性别",
+    site_histology_coarse_age: "部位 + 组织学 + 粗年龄组 + TNM",
+    site_histology_tnm: "部位 + 组织学 + TNM",
+    site_histology_m: "部位 + 组织学 + M 分期",
+    site_histology: "部位 + 组织学",
     no_histology: "忽略组织学",
     coarse_age: "粗年龄组",
     site_tnm: "部位 + TNM",
@@ -243,6 +277,10 @@ export function matchingLevelLabel(level: string, language: Language = "zh"): st
   const labelsEn: Record<string, string> = {
     full: "Full match",
     no_sex: "Sex ignored",
+    site_histology_coarse_age: "Site + histology + coarse age + TNM",
+    site_histology_tnm: "Site + histology + TNM",
+    site_histology_m: "Site + histology + M stage",
+    site_histology: "Site + histology",
     no_histology: "Histology ignored",
     coarse_age: "Coarse age group",
     site_tnm: "Site + TNM",

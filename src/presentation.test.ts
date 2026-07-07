@@ -5,6 +5,7 @@ import {
   APP_COPY_EN,
   displayLabel,
   formatCaseCount,
+  formatConfidenceInterval,
   formatFollowupMonths,
   formatMatchedKey,
   formatMedianSurvival,
@@ -17,6 +18,8 @@ describe("presentation helpers", () => {
   it("formats survival probabilities as percentages", () => {
     expect(formatProbability(0.91234)).toBe("91.2%");
     expect(formatProbability(1)).toBe("100%");
+    expect(formatConfidenceInterval([0.81234, 0.94567])).toBe("95% CI 81.2%-94.6%");
+    expect(formatConfidenceInterval([0.37, 0.691])).toBe("95% CI 37.0%-69.1%");
   });
 
   it("formats median survival months", () => {
@@ -37,8 +40,10 @@ describe("presentation helpers", () => {
     expect(qualityLabel("stable")).toBe("样本稳定");
     expect(qualityLabel("very_small_sample")).toBe("极小样本");
     expect(matchingLevelLabel("site_tnm")).toBe("部位 + TNM");
+    expect(matchingLevelLabel("site_histology_m")).toBe("部位 + 组织学 + M 分期");
     expect(qualityLabel("stable", "en")).toBe("Stable sample");
     expect(matchingLevelLabel("site_tnm", "en")).toBe("Site + TNM");
+    expect(matchingLevelLabel("site_histology_m", "en")).toBe("Site + histology + M stage");
   });
 
   it("uses the redesigned product name and non-technical status copy", () => {
@@ -54,6 +59,7 @@ describe("presentation helpers", () => {
     expect(APP_COPY.method.title).toBe("方法与边界");
     expect(APP_COPY.method.points).toEqual([
       "基于 SEER 队列中相似病例组的统计生存结果。",
+      "生存率区间为离线计算的 Greenwood log-log 95% 置信区间。",
       "展示队列层面的生存参照，不是个人预后预测。",
       "不用于临床决策，具体诊疗需要结合医生判断。",
     ]);
@@ -88,6 +94,9 @@ describe("presentation helpers", () => {
     );
     expect(formatMatchedKey("site_tnm|Any|Tongue|Any|Any|T2|N1|M0", "en")).toBe(
       "Site + TNM · Sex: any · Tongue · Histology: any · Age: any · T2 / N1 / M0",
+    );
+    expect(formatMatchedKey("site_histology_m|Any|Tongue|8050-8089: squamous cell neoplasms|Any|Any|Any|M0")).toBe(
+      "部位 + 组织学 + M 分期 · 性别不限 · 舌 · 8050-8089：鳞状细胞肿瘤 · 年龄不限 · 不限 / 不限 / M0",
     );
   });
 });

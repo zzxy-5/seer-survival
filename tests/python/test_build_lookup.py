@@ -27,10 +27,12 @@ class BuildLookupTests(unittest.TestCase):
         artifact = {
             "summary": {"record_count": 12, "row_count": 3},
             "thresholds": {"minimum_sample": 20, "stable_sample": 50},
+            "confidence_interval": {"level": 0.95, "method": "Greenwood log-log"},
         }
         metadata = build_metadata("统计表.xlsx", 14, artifact, 2, Counter({"bad row": 2}))
 
         self.assertEqual(metadata["data_source"], DATA_SOURCE)
+        self.assertEqual(metadata["confidence_interval"]["method"], "Greenwood log-log")
         self.assertEqual(metadata["source_file"], "统计表.xlsx")
         self.assertIn("SEER 数据库导出表", metadata["data_source"]["zh"])
         self.assertNotEqual(metadata["data_source"]["zh"], metadata["source_file"])

@@ -8,6 +8,7 @@ import {
   appCopy,
   displayLabel,
   formatCaseCount,
+  formatConfidenceInterval,
   formatFollowupMonths,
   formatMatchedKey,
   formatMedianSurvival,
@@ -246,7 +247,7 @@ export default function App() {
             {lookup.error ? (
               <EmptyResult title={lookup.error} />
             ) : lookup.result ? (
-              <ResultView result={lookup.result} language={language} ui={ui} />
+              <ResultView result={lookup.result} selectedHistologyGroup={form.histologyGroup} language={language} ui={ui} />
             ) : artifact ? (
               <EmptyResult title={ui.noGroup} />
             ) : (
@@ -405,8 +406,20 @@ function MethodBoundary({ copy }: { copy: typeof APP_COPY | typeof import("./pre
   );
 }
 
-function ResultView({ result, language, ui }: { result: LookupResult; language: Language; ui: (typeof UI_COPY)[Language] }) {
+function ResultView({
+  result,
+  selectedHistologyGroup,
+  language,
+  ui,
+}: {
+  result: LookupResult;
+  selectedHistologyGroup: string;
+  language: Language;
+  ui: (typeof UI_COPY)[Language];
+}) {
   const row = result.row;
+  const risk60Detail = row.risk_60m < 10 ? ui.risk60Caution : ui.risk60Context;
+  const histologyWasIgnored = selectedHistologyGroup !== "" && row.histology_group === "Any";
   return (
     <>
       <div className="result-topline">
@@ -429,11 +442,18 @@ function ResultView({ result, language, ui }: { result: LookupResult; language: 
         <span className={`quality ${row.data_quality_flag}`}>{qualityLabel(row.data_quality_flag, language)}</span>
       </div>
 
+      {histologyWasIgnored ? <p className="match-note">{ui.histologyIgnoredNotice}</p> : null}
+
       <div className="metric-grid">
-        <Metric label={ui.survival12} value={formatProbability(row.survival_12m)} />
-        <Metric label={ui.survival36} value={formatProbability(row.survival_36m)} />
-        <Metric label={ui.survival60} value={formatProbability(row.survival_60m)} />
-        <Metric label={ui.risk60} value={formatCaseCount(row.risk_60m, language)} />
+        <Metric label={ui.survival12} value={formatProbability(row.survival_12m)} detail={formatConfidenceInterval(row.survival_12m_ci)} />
+        <Metric label={ui.survival36} value={formatProbability(row.survival_36m)} detail={formatConfidenceInterval(row.survival_36m_ci)} />
+        <Metric label={ui.survival60} value={formatProbability(row.survival_60m)} detail={formatConfidenceInterval(row.survival_60m_ci)} />
+        <Metric
+          label={ui.followupHint}
+          value={`${ui.risk60Short}: ${formatCaseCount(row.risk_60m, language)}`}
+          detail={risk60Detail}
+          tone={row.risk_60m < 10 ? "warning" : "note"}
+        />
       </div>
 
       <SurvivalCurve row={row} ui={ui} />
@@ -458,64 +478,181 @@ function ResultView({ result, language, ui }: { result: LookupResult; language: 
   );
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
+function Metric({
+  label,
+  value,
+  detail,
+  tone = "default",
+}: {
+  label: string;
+  value: string;
+  detail?: string;
+  tone?: "default" | "note" | "warning";
+}) {
   return (
-    <div className="metric">
+    <div className={tone === "default" ? "metric" : `metric metric--${tone}`}>
       <span>{label}</span>
       <strong>{value}</strong>
+      {detail ? <small>{detail}</small> : null}
     </div>
   );
 }
 
+const CENSOR_MARKER_LIMIT = 28;
+
+function selectCensorMarkerMonths(months: number[], maxMonth: number): number[] {
+  const uniqueMonths = [...new Set(months.filter((month) => month > 0 && month <= maxMonth))].sort((a, b) => a - b);
+  if (uniqueMonths.length <= CENSOR_MARKER_LIMIT) {
+    return uniqueMonths;
+  }
+
+  const step = (uniqueMonths.length - 1) / (CENSOR_MARKER_LIMIT - 1);
+  return [...new Set(Array.from({ length: CENSOR_MARKER_LIMIT }, (_item, index) => uniqueMonths[Math.round(index * step)]))];
+}
+
 function SurvivalCurve({ row, ui }: { row: LookupRow; ui: (typeof UI_COPY)[Language] }) {
-  const chart = { left: 18, right: 154, top: 12, bottom: 86 };
-  const maxMonth = row.risk_60m < 10 ? 48 : 60;
+  const chart = { left: 62, right: 226, top: 16, bottom: 106 };
+  const maxMonth = 60;
   const xScale = (month: number) => chart.left + (Math.min(month, maxMonth) / maxMonth) * (chart.right - chart.left);
   const yScale = (probability: number) => chart.bottom - Math.max(0, Math.min(1, probability)) * (chart.bottom - chart.top);
-  const curvePoints = row.curve_months
-    .map((month, index) => ({ month, probability: row.curve_survival_probs[index] }))
-    .filter((point) => point.probability !== undefined && point.month <= maxMonth);
-  const lastPoint = curvePoints.at(-1) ?? { month: 0, probability: 1 };
-  const displayedPoints = lastPoint.month < maxMonth ? [...curvePoints, { month: maxMonth, probability: lastPoint.probability }] : curvePoints;
-  const lineCommands = displayedPoints.flatMap((point, index) => {
-    const x = xScale(point.month).toFixed(2);
-    const y = yScale(point.probability).toFixed(2);
-    if (index === 0) {
-      return [`M ${x} ${y}`];
+  type CurvePoint = { month: number; probability: number };
+  const buildCurvePoints = (probabilities: number[]): CurvePoint[] =>
+    row.curve_months
+      .map((month, index) => ({ month, probability: probabilities[index] }))
+      .filter((point): point is CurvePoint => typeof point.probability === "number" && point.month <= maxMonth);
+  const extendToHorizon = (points: CurvePoint[]): CurvePoint[] => {
+    const lastPoint = points.at(-1);
+    if (!lastPoint) {
+      return [];
     }
-    return [`H ${x}`, `V ${y}`];
-  });
-  const curvePath = lineCommands.join(" ");
-  const xTicks = [0, 12, 24, 36, 48, 60].filter((tick) => tick <= maxMonth);
+
+    return lastPoint.month < maxMonth ? [...points, { month: maxMonth, probability: lastPoint.probability }] : points;
+  };
+  const curvePoints = buildCurvePoints(row.curve_survival_probs);
+  const displayedPoints = extendToHorizon(curvePoints);
+  const stepCoordinates = (points: CurvePoint[]) => {
+    const coordinates: Array<{ x: number; y: number }> = [];
+    points.forEach((point, index) => {
+      const x = xScale(point.month);
+      const y = yScale(point.probability);
+      if (index === 0) {
+        coordinates.push({ x, y });
+        return;
+      }
+      const previous = points[index - 1];
+      coordinates.push({ x, y: yScale(previous.probability) }, { x, y });
+    });
+    return coordinates;
+  };
+  const coordinatesPath = (coordinates: Array<{ x: number; y: number }>, firstCommand = "M") =>
+    coordinates
+      .map((point, index) => `${index === 0 ? firstCommand : "L"} ${point.x.toFixed(2)} ${point.y.toFixed(2)}`)
+      .join(" ");
+  const stepPath = (points: CurvePoint[]) => coordinatesPath(stepCoordinates(points));
+  const curvePath = stepPath(displayedPoints);
+  const xTicks = [0, 12, 24, 36, 48, 60];
+  const riskCountByMonth = new Map(row.risk_table_months.map((month, index) => [month, row.risk_table_counts[index]]));
+  const riskTable = xTicks.map((month) => ({ month, count: month === 60 ? row.risk_60m : riskCountByMonth.get(month) })).filter((point) => point.count !== undefined);
   const yTicks = [
-    { label: "100%", value: 1 },
-    { label: "50%", value: 0.5 },
+    { label: "100", value: 1 },
+    { label: "80", value: 0.8 },
+    { label: "60", value: 0.6 },
+    { label: "40", value: 0.4 },
+    { label: "20", value: 0.2 },
+    { label: "0", value: 0 },
   ];
+  const survivalAtMonth = (month: number) => {
+    let probability = 1;
+    for (const point of curvePoints) {
+      if (point.month <= month) {
+        probability = point.probability;
+      } else {
+        break;
+      }
+    }
+    return probability;
+  };
+  const censorMarkers = selectCensorMarkerMonths(row.censor_months ?? [], maxMonth).map((month) => ({
+    month,
+    probability: survivalAtMonth(month),
+  }));
+  const censorMarkerHalfHeight = 1.35;
+  const medianMonth = row.median_survival_months;
+  const medianX = medianMonth !== null && medianMonth >= 0 && medianMonth <= maxMonth ? xScale(medianMonth) : null;
+  const hasMedianMarker = medianX !== null;
+  const medianY = yScale(0.5);
+  const medianLabelX = medianX === null ? chart.left : Math.min(Math.max(chart.left, medianX + 2), chart.right - 24);
 
   return (
     <figure className="curve-panel">
-      <figcaption>{ui.kmCurve}</figcaption>
-      <svg viewBox="0 0 160 100" role="img" aria-label={ui.kmCurve}>
+      <figcaption>
+        <span>{ui.kmCurve}</span>
+        <span className="curve-legend">
+          <span className="legend-censor">{ui.censorMarkers}</span>
+        </span>
+      </figcaption>
+      <svg viewBox="0 0 244 166" role="img" aria-label={ui.kmCurve}>
+        <text className="axis-title y-axis-title" x="11" y={(chart.top + chart.bottom) / 2} transform={`rotate(-90 11 ${(chart.top + chart.bottom) / 2})`}>
+          {ui.overallSurvivalAxis}
+        </text>
         {xTicks.map((tick) => (
           <g key={tick}>
-            <line className="grid-line vertical" x1={xScale(tick)} y1={chart.top} x2={xScale(tick)} y2={chart.bottom} />
-            <line className="tick-line" x1={xScale(tick)} y1={chart.bottom} x2={xScale(tick)} y2={chart.bottom + 1.8} />
-            <text className="axis-label x-label" x={xScale(tick)} y="94">
-              {tick === maxMonth ? `${tick} ${ui.monthSuffix}` : tick}
+            <line className="tick-line" x1={xScale(tick)} y1={chart.bottom} x2={xScale(tick)} y2={chart.bottom + 2.5} vectorEffect="non-scaling-stroke" />
+            <text className="axis-label x-label" x={xScale(tick)} y="117">
+              {tick}
             </text>
           </g>
         ))}
         {yTicks.map((tick) => (
           <g key={tick.label}>
-            <line className={tick.value === 0.5 ? "reference-line" : "grid-line"} x1={chart.left} y1={yScale(tick.value)} x2={chart.right} y2={yScale(tick.value)} />
-            <text className="axis-label y-label" x={chart.left - 2.4} y={yScale(tick.value) + 1.2}>
+            {tick.value > 0 && tick.value < 1 ? (
+              <line className="reference-line" x1={chart.left} y1={yScale(tick.value)} x2={chart.right} y2={yScale(tick.value)} vectorEffect="non-scaling-stroke" />
+            ) : null}
+            <line className="y-tick-line" x1={chart.left - 2.8} y1={yScale(tick.value)} x2={chart.left} y2={yScale(tick.value)} vectorEffect="non-scaling-stroke" />
+            <text className="axis-label y-label" x={chart.left - 4.2} y={yScale(tick.value) + 1.2}>
               {tick.label}
             </text>
           </g>
         ))}
-        <line className="axis-line" x1={chart.left} y1={chart.bottom} x2={chart.right} y2={chart.bottom} />
-        <line className="axis-line" x1={chart.left} y1={chart.top} x2={chart.left} y2={chart.bottom} />
-        <path className="curve-line" d={curvePath} />
+        <line className="axis-line" x1={chart.left} y1={chart.bottom} x2={chart.right} y2={chart.bottom} vectorEffect="non-scaling-stroke" />
+        <line className="axis-line" x1={chart.left} y1={chart.top} x2={chart.left} y2={chart.bottom} vectorEffect="non-scaling-stroke" />
+        {hasMedianMarker && medianX !== null ? (
+          <g className="median-marker" aria-hidden="true">
+            <line className="median-helper-line" x1={chart.left} y1={medianY} x2={medianX} y2={medianY} vectorEffect="non-scaling-stroke" />
+            <line className="median-helper-line" x1={medianX} y1={medianY} x2={medianX} y2={chart.bottom} vectorEffect="non-scaling-stroke" />
+            <text className="median-label" x={medianLabelX} y={medianY - 2}>
+              {ui.medianMarker} {medianMonth} mo
+            </text>
+          </g>
+        ) : null}
+        <path className="curve-line" d={curvePath} strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+        <g className="censor-marks" aria-hidden="true">
+          {censorMarkers.map((marker) => {
+            const y = yScale(marker.probability);
+            return (
+              <line
+                key={marker.month}
+                className="censor-mark"
+                x1={xScale(marker.month)}
+                x2={xScale(marker.month)}
+                y1={Math.max(chart.top, y - censorMarkerHalfHeight)}
+                y2={Math.min(chart.bottom, y + censorMarkerHalfHeight)}
+                vectorEffect="non-scaling-stroke"
+              />
+            );
+          })}
+        </g>
+        <text className="axis-title x-axis-title" x={(chart.left + chart.right) / 2} y="128">
+          Time (Months)
+        </text>
+        <text className="risk-table-label" x={chart.left - 16} y="148">
+          {ui.numberAtRisk}
+        </text>
+        {riskTable.map((point) => (
+          <text key={point.month} className="risk-table-count" x={xScale(point.month)} y="148">
+            {point.count}
+          </text>
+        ))}
       </svg>
     </figure>
   );
